@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>🚃 旅ログ</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --orange: #f97316; --orange-dark: #ea580c; --blue: #1e293b; --gray: #64748b; --light: #94a3b8; --border: #e2e8f0; --bg-light: #f8fafc; --bg-selected: #fff7ed; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Segoe UI", sans-serif; background: #fff; color: var(--blue); -webkit-font-smoothing: antialiased; overscroll-behavior: none; }
+input, textarea, button { font-family: inherit; font-size: 16px; }
+input[type="date"], input[type="time"] { font-size: 16px; }
+
+.app { max-width: 430px; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+.header { padding: 12px 16px 4px; text-align: center; }
+.header-title { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px; }
+.header-icon { font-size: 18px; }
+.header-text { font-size: 14px; font-weight: 700; color: var(--blue); }
+.progress { display: flex; gap: 4px; padding: 0 16px 8px; }
+.progress-dot { height: 4px; flex: 1; border-radius: 4px; background: #e5e7eb; transition: background 0.3s; }
+.progress-dot.active { background: var(--orange); }
+
+.content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 20px; }
+.nav { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px 24px; }
+.nav-back { padding: 10px 20px; border-radius: 99px; font-size: 14px; font-weight: 500; color: var(--gray); background: #f1f5f9; border: none; cursor: pointer; }
+.nav-next { padding: 10px 24px; border-radius: 99px; font-size: 14px; font-weight: 700; color: #fff; background: linear-gradient(135deg, #f97316, #ea580c); border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(249,115,22,0.3); }
+
+/* Intro */
+.intro { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; padding: 24px; text-align: center; min-height: 60vh; }
+.intro-emoji { font-size: 72px; margin-bottom: 16px; }
+.intro-title { font-size: 32px; font-weight: 900; margin-bottom: 8px; }
+.intro-sub { font-size: 16px; color: var(--light); margin-bottom: 24px; }
+.intro-box { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 16px; padding: 20px; text-align: left; width: 100%; max-width: 340px; }
+.intro-box p { font-size: 14px; line-height: 1.7; color: #475569; }
+.intro-box .accent { color: var(--orange); font-weight: 600; }
+
+/* Form elements */
+.section { padding: 0 20px; }
+.label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--light); margin-bottom: 8px; }
+.field { margin-bottom: 20px; }
+.text-input { width: 100%; padding: 12px 16px; border-radius: 12px; border: 2px solid var(--border); font-size: 15px; outline: none; color: var(--blue); background: #fff; transition: border-color 0.2s; }
+.text-input:focus, .text-input.filled { border-color: var(--orange); }
+.text-input::placeholder { color: #cbd5e1; }
+textarea.text-input { resize: none; line-height: 1.6; }
+
+.chip-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { padding: 10px 16px; border-radius: 12px; border: 2px solid var(--border); background: var(--bg-light); font-size: 14px; font-weight: 500; color: var(--gray); cursor: pointer; transition: all 0.2s; user-select: none; -webkit-tap-highlight-color: transparent; }
+.chip.selected { border-color: var(--orange); background: var(--bg-selected); color: var(--orange-dark); transform: scale(1.03); }
+.chip-weather { flex: 1; text-align: center; padding: 12px 8px; }
+.chip-weather .emoji { font-size: 24px; display: block; margin-bottom: 4px; }
+.chip-weather .wlabel { font-size: 12px; }
+
+/* Route */
+.route-card { margin-bottom: 16px; padding: 16px; border-radius: 16px; background: var(--bg-light); border: 1px solid var(--border); position: relative; }
+.route-num { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 10px; border-radius: 99px; background: var(--orange); color: #fff; margin-bottom: 12px; }
+.route-delete { position: absolute; top: 16px; right: 16px; font-size: 12px; color: #cbd5e1; background: none; border: none; cursor: pointer; }
+.route-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 4px; }
+.route-arrow { text-align: center; font-size: 18px; color: #cbd5e1; padding: 2px 0; }
+.route-label { font-size: 11px; color: var(--light); margin-bottom: 4px; display: block; }
+.route-input { width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 14px; outline: none; color: var(--blue); }
+.route-input:focus { border-color: var(--orange); }
+.add-btn { width: 100%; padding: 12px; border-radius: 12px; border: 2px dashed var(--orange); background: var(--bg-selected); color: var(--orange); font-size: 14px; font-weight: 700; cursor: pointer; }
+
+/* Photos */
+.photo-upload { border-radius: 16px; overflow: hidden; border: 2px dashed #cbd5e1; background: #f1f5f9; min-height: 120px; cursor: pointer; position: relative; margin-bottom: 8px; transition: border-color 0.2s; }
+.photo-upload.has-image { border-style: solid; border-color: var(--orange); min-height: auto; }
+.photo-upload img { width: 100%; max-height: 300px; object-fit: cover; display: block; }
+.photo-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px; }
+.photo-placeholder .emoji { font-size: 32px; margin-bottom: 4px; }
+.photo-placeholder .plabel { font-size: 12px; color: var(--light); }
+.photo-upload input[type="file"] { display: none; }
+.photo-item { margin-bottom: 16px; }
+
+/* Senses */
+.sense-section { margin-bottom: 20px; }
+.sense-title { font-size: 14px; font-weight: 700; color: #475569; margin-bottom: 10px; }
+.tag-group { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag { padding: 8px 14px; border-radius: 99px; border: 1.5px solid var(--border); background: var(--bg-light); font-size: 13px; font-weight: 500; color: var(--gray); cursor: pointer; transition: all 0.2s; user-select: none; -webkit-tap-highlight-color: transparent; }
+.tag.selected { border-color: var(--orange); background: var(--bg-selected); color: var(--orange-dark); transform: scale(1.05); }
+
+/* Mood */
+.mood-section { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; padding: 0 20px; }
+.mood-prompt { font-size: 14px; color: var(--light); margin-bottom: 32px; }
+.mood-list { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 300px; }
+.mood-btn { display: flex; align-items: center; gap: 16px; padding: 16px 20px; border-radius: 16px; border: 2px solid var(--border); background: var(--bg-light); cursor: pointer; transition: all 0.2s; user-select: none; -webkit-tap-highlight-color: transparent; }
+.mood-btn.selected { border-color: var(--orange); background: var(--bg-selected); transform: scale(1.02); }
+.mood-emoji { font-size: 28px; }
+.mood-label { font-size: 15px; font-weight: 500; color: var(--gray); }
+.mood-btn.selected .mood-label { color: var(--orange-dark); }
+
+/* Highlight */
+.highlight-section { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 50vh; padding: 0 20px; }
+.hl-icon { font-size: 48px; margin-bottom: 12px; }
+.hl-prompt { font-size: 14px; color: var(--light); margin-bottom: 4px; }
+.hl-sub { font-size: 12px; color: #cbd5e1; margin-bottom: 24px; }
+.hl-field { width: 100%; margin-bottom: 24px; }
+.hl-field-label { font-size: 12px; color: var(--light); margin-bottom: 8px; }
+
+/* Done */
+.done-section { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; padding: 0 20px; text-align: center; }
+.done-emoji { font-size: 64px; margin-bottom: 16px; }
+.done-title { font-size: 24px; font-weight: 900; margin-bottom: 8px; }
+.done-msg { font-size: 14px; color: var(--gray); margin-bottom: 8px; }
+.done-meta { font-size: 12px; color: var(--light); margin-bottom: 32px; }
+.done-btns { width: 100%; max-width: 280px; display: flex; flex-direction: column; gap: 12px; }
+.btn-export { width: 100%; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 700; color: #fff; background: linear-gradient(135deg, #f97316, #ea580c); border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(249,115,22,0.3); }
+.btn-new { width: 100%; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 500; color: var(--gray); background: #f1f5f9; border: none; cursor: pointer; }
+
+.hint { font-size: 12px; color: var(--light); margin-bottom: 16px; }
+.toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: var(--blue); color: #fff; padding: 10px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; z-index: 50; box-shadow: 0 4px 20px rgba(0,0,0,0.2); animation: fadeIn 0.3s; }
+@keyframes fadeIn { from { opacity:0; transform: translateX(-50%) translateY(10px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+
+/* safe area for newer iPhones */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .nav { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useRef, useEffect } = React;
+
+const STEPS = ["intro","basic","route","photos","senses","mood","highlight","done"];
+
+const MOODS = [
+  { emoji: "😆", label: "最高！" },
+  { emoji: "😊", label: "楽しかった" },
+  { emoji: "😌", label: "まあまあ" },
+  { emoji: "😐", label: "ふつう" },
+  { emoji: "😫", label: "つかれた…" },
+];
+
+const SENSES = [
+  { label: "👀 見たもの", options: ["景色がすごかった","電車・車両","建物・駅舎","人・街の雰囲気","夜景・朝焼け"] },
+  { label: "👂 聞こえた音", options: ["走行音がよかった","アナウンス","メロディ信号","街の音・自然の音","踏切の音"] },
+  { label: "🌡️ 体の感覚", options: ["暑かった","寒かった","風が気持ちよかった","疲れた","眠かった"] },
+];
+
+const WEATHERS = [
+  { emoji: "☀️", label: "晴れ" },
+  { emoji: "☁️", label: "くもり" },
+  { emoji: "🌧️", label: "雨" },
+  { emoji: "❄️", label: "雪" },
+];
+
+const TODAY = new Date().toISOString().split("T")[0];
+
+function getStepInfo(id) {
+  const map = {
+    intro: { icon: "🚃", title: "旅ログ" },
+    basic: { icon: "📅", title: "基本情報" },
+    route: { icon: "🗺️", title: "ルート" },
+    photos: { icon: "📷", title: "ベストショット" },
+    senses: { icon: "👀", title: "五感チェック" },
+    mood: { icon: "😊", title: "今日の気分" },
+    highlight: { icon: "✨", title: "ハイライト" },
+    done: { icon: "🎉", title: "完了" },
+  };
+  return map[id] || {};
+}
+
+function App() {
+  const [step, setStep] = useState(0);
+  const [data, setData] = useState({
+    date: TODAY,
+    destination: "",
+    weather: "",
+    companion: "",
+    routes: [{ from:"", dep:"", to:"", arr:"", line:"" }],
+    photos: [{ caption:"", image:null }, { caption:"", image:null }],
+    senses: {},
+    food: "",
+    mood: "",
+    highlight: "",
+    discovery: "",
+  });
+  const [copied, setCopied] = useState(false);
+  const contentRef = useRef(null);
+
+  useEffect(() => {
+    if (contentRef.current) contentRef.current.scrollTop = 0;
+  }, [step]);
+
+  const update = (key, val) => setData(d => ({ ...d, [key]: val }));
+  const currentId = STEPS[step];
+  const info = getStepInfo(currentId);
+  const isFirst = step === 0;
+  const isLast = step === STEPS.length - 1;
+
+  const goNext = () => { if (step < STEPS.length - 1) setStep(step + 1); };
+  const goBack = () => { if (step > 0) setStep(step - 1); };
+
+  const generateText = () => {
+    let t = "🚃 旅ログ\n═══════════════════\n\n";
+    if (data.date) t += `📅 ${data.date}`;
+    if (data.weather) t += ` ｜ ${data.weather}`;
+    if (data.companion) t += ` ｜ ${data.companion}`;
+    t += "\n";
+    if (data.destination) t += `📍 行き先：${data.destination}\n`;
+    t += "\n";
+    if (data.routes.some(r => r.from || r.to)) {
+      t += "🗺️ ルート\n───────────────────\n";
+      data.routes.forEach((r, i) => {
+        if (r.from || r.to) {
+          t += `  ${i+1}. `;
+          if (r.from) t += r.from;
+          if (r.dep) t += `（${r.dep}）`;
+          t += " → ";
+          if (r.to) t += r.to;
+          if (r.arr) t += `（${r.arr}）`;
+          if (r.line) t += ` ／ ${r.line}`;
+          t += "\n";
+        }
+      });
+      t += "\n";
+    }
+    if (data.photos.some(p => p.caption)) {
+      t += "📷 ベストショット\n───────────────────\n";
+      data.photos.forEach((p, i) => { if (p.caption) t += `  ${i+1}. ${p.caption}\n`; });
+      t += "\n";
+    }
+    const senseKeys = Object.keys(data.senses).filter(k => data.senses[k]);
+    if (senseKeys.length > 0) {
+      t += "👀 五感チェック\n───────────────────\n";
+      t += `  ${senseKeys.map(k => k.split("|")[1]).join("、")}\n\n`;
+    }
+    if (data.food) t += `🍽️ 食べたもの：${data.food}\n\n`;
+    if (data.mood) t += `😊 気分：${data.mood}\n\n`;
+    if (data.highlight) t += `✨ ハイライト\n───────────────────\n  ${data.highlight}\n\n`;
+    if (data.discovery) t += `💡 発見・気づき\n───────────────────\n  ${data.discovery}\n\n`;
+    t += "═══════════════════";
+    return t;
+  };
+
+  const handleExport = async () => {
+    const text = generateText();
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.cssText = "position:fixed;left:-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  const handleNew = () => {
+    setData({
+      date: TODAY, destination: "", weather: "", companion: "",
+      routes: [{ from:"", dep:"", to:"", arr:"", line:"" }],
+      photos: [{ caption:"", image:null }, { caption:"", image:null }],
+      senses: {}, food: "", mood: "", highlight: "", discovery: "",
+    });
+    setStep(0);
+  };
+
+  // --- Route helpers ---
+  const updateRoute = (idx, field, val) => {
+    const r = [...data.routes];
+    r[idx] = { ...r[idx], [field]: val };
+    update("routes", r);
+  };
+  const addRoute = () => update("routes", [...data.routes, { from:"", dep:"", to:"", arr:"", line:"" }]);
+  const removeRoute = (idx) => { if (data.routes.length > 1) update("routes", data.routes.filter((_,i)=>i!==idx)); };
+
+  // --- Photo helpers ---
+  const updatePhoto = (idx, field, val) => {
+    const p = [...data.photos];
+    p[idx] = { ...p[idx], [field]: val };
+    update("photos", p);
+  };
+  const handleImage = (idx, e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => updatePhoto(idx, "image", ev.target.result);
+    reader.readAsDataURL(file);
+  };
+  const addPhoto = () => { if (data.photos.length < 6) update("photos", [...data.photos, { caption:"", image:null }]); };
+
+  // --- Sense toggle ---
+  const toggleSense = (cat, opt) => {
+    const key = `${cat}|${opt}`;
+    const s = { ...data.senses };
+    s[key] = !s[key];
+    if (!s[key]) delete s[key];
+    update("senses", s);
+  };
+
+  const renderContent = () => {
+    switch (currentId) {
+      case "intro":
+        return (
+          <div className="intro">
+            <div className="intro-emoji">🚃</div>
+            <div className="intro-title">旅ログ</div>
+            <div className="intro-sub">Trip Log</div>
+            <div className="intro-box">
+              <p>今日の旅を記録しよう。<br/><span className="accent">全部埋めなくてOK。</span><br/>写真とひとことだけでも十分 👍</p>
+            </div>
+          </div>
+        );
+
+      case "basic":
+        return (
+          <div className="section">
+            <div className="field">
+              <label className="label">日付</label>
+              <input type="date" className={`text-input${data.date?" filled":""}`} value={data.date} onChange={e=>update("date",e.target.value)} />
+            </div>
+            <div className="field">
+              <label className="label">行き先</label>
+              <input type="text" className={`text-input${data.destination?" filled":""}`} placeholder="例：仙台、名古屋、房総半島…" value={data.destination} onChange={e=>update("destination",e.target.value)} />
+            </div>
+            <div className="field">
+              <label className="label">天気</label>
+              <div className="chip-group">
+                {WEATHERS.map(w => (
+                  <div key={w.label} className={`chip chip-weather${data.weather===w.label?" selected":""}`} onClick={()=>update("weather",w.label)}>
+                    <span className="emoji">{w.emoji}</span>
+                    <span className="wlabel">{w.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="field">
+              <label className="label">誰と？</label>
+              <div className="chip-group">
+                {["ひとり","友達と","家族と"].map(c => (
+                  <div key={c} className={`chip${data.companion===c?" selected":""}`} style={{flex:1,textAlign:"center"}} onClick={()=>update("companion",c)}>{c}</div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
+      case "route":
+        return (
+          <div className="section">
+            <p className="hint">乗った電車を順番に。途中下車も書いてみよう。</p>
+            {data.routes.map((r, idx) => (
+              <div key={idx} className="route-card">
+                <span className="route-num">{idx+1}</span>
+                {data.routes.length > 1 && <button className="route-delete" onClick={()=>removeRoute(idx)}>✕ 削除</button>}
+                <div className="route-grid">
+                  <div><span className="route-label">出発駅</span><input className="route-input" placeholder="東京" value={r.from} onChange={e=>updateRoute(idx,"from",e.target.value)}/></div>
+                  <div><span className="route-label">出発時間</span><input type="time" className="route-input" value={r.dep} onChange={e=>updateRoute(idx,"dep",e.target.value)}/></div>
+                </div>
+                <div className="route-arrow">↓</div>
+                <div className="route-grid">
+                  <div><span className="route-label">到着駅</span><input className="route-input" placeholder="仙台" value={r.to} onChange={e=>updateRoute(idx,"to",e.target.value)}/></div>
+                  <div><span className="route-label">到着時間</span><input type="time" className="route-input" value={r.arr} onChange={e=>updateRoute(idx,"arr",e.target.value)}/></div>
+                </div>
+                <div style={{marginTop:8}}><span className="route-label">路線名・メモ</span><input className="route-input" placeholder="東北本線 / グリーン車にした 等" value={r.line} onChange={e=>updateRoute(idx,"line",e.target.value)}/></div>
+              </div>
+            ))}
+            <button className="add-btn" onClick={addRoute}>＋ 区間を追加</button>
+          </div>
+        );
+
+      case "photos":
+        return (
+          <div className="section">
+            <p className="hint">いい写真を選んで、ひとこと添えるだけでOK。</p>
+            {data.photos.map((p, idx) => (
+              <div key={idx} className="photo-item">
+                <label className={`photo-upload${p.image?" has-image":""}`}>
+                  {p.image ? (
+                    <img src={p.image} alt={`写真${idx+1}`} />
+                  ) : (
+                    <div className="photo-placeholder">
+                      <span className="emoji">📷</span>
+                      <span className="plabel">タップして写真 {idx+1} を選ぶ</span>
+                    </div>
+                  )}
+                  <input type="file" accept="image/*" onChange={e=>handleImage(idx,e)} />
+                </label>
+                <input type="text" className={`text-input${p.caption?" filled":""}`}
+                  placeholder={idx===0?"例：朝5時の東京駅 まだ暗い":idx===1?"例：仙台着いた でかい":"ひとこと"}
+                  value={p.caption} onChange={e=>updatePhoto(idx,"caption",e.target.value)} />
+              </div>
+            ))}
+            {data.photos.length < 6 && <button className="add-btn" onClick={addPhoto}>＋ 写真を追加（{data.photos.length}/6）</button>}
+          </div>
+        );
+
+      case "senses":
+        return (
+          <div className="section">
+            <p className="hint">タップするだけ。思い出すきっかけになるよ。</p>
+            {SENSES.map(cat => (
+              <div key={cat.label} className="sense-section">
+                <div className="sense-title">{cat.label}</div>
+                <div className="tag-group">
+                  {cat.options.map(opt => {
+                    const key = `${cat.label}|${opt}`;
+                    const on = !!data.senses[key];
+                    return <span key={opt} className={`tag${on?" selected":""}`} onClick={()=>toggleSense(cat.label,opt)}>{on?"✓ ":""}{opt}</span>;
+                  })}
+                </div>
+              </div>
+            ))}
+            <div className="field" style={{marginTop:8}}>
+              <div className="sense-title">🍽️ 食べたもの</div>
+              <input type="text" className={`text-input${data.food?" filled":""}`} placeholder="例：仙台駅で牛タン弁当 うまかった" value={data.food} onChange={e=>update("food",e.target.value)} />
+            </div>
+          </div>
+        );
+
+      case "mood":
+        return (
+          <div className="mood-section">
+            <div className="mood-prompt">今日の旅、どうだった？</div>
+            <div className="mood-list">
+              {MOODS.map(m => (
+                <div key={m.label} className={`mood-btn${data.mood===m.label?" selected":""}`} onClick={()=>update("mood",m.label)}>
+                  <span className="mood-emoji">{m.emoji}</span>
+                  <span className="mood-label">{m.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case "highlight":
+        return (
+          <div className="highlight-section">
+            <div className="hl-icon">✨</div>
+            <div className="hl-prompt">一番テンション上がった瞬間は？</div>
+            <div className="hl-sub">1行でいい。なんでもいい。</div>
+            <div className="hl-field">
+              <textarea className={`text-input${data.highlight?" filled":""}`} rows={4}
+                placeholder="例：始発で誰もいないホームに立ったとき、旅が始まる感じがしてワクワクした"
+                value={data.highlight} onChange={e=>update("highlight",e.target.value)} />
+            </div>
+            <div className="hl-field">
+              <div className="hl-field-label">💡 発見・気づいたこと（あれば）</div>
+              <textarea className={`text-input${data.discovery?" filled":""}`} rows={3}
+                placeholder="「この駅意外とよかった」「次はここ行きたい」とか"
+                value={data.discovery} onChange={e=>update("discovery",e.target.value)} />
+            </div>
+          </div>
+        );
+
+      case "done":
+        const filled = [data.destination, data.routes.some(r=>r.from||r.to), data.photos.some(p=>p.caption||p.image), Object.keys(data.senses).length>0, data.mood, data.highlight].filter(Boolean).length;
+        return (
+          <div className="done-section">
+            <div className="done-emoji">🎉</div>
+            <div className="done-title">おつかれ！</div>
+            <div className="done-msg">{filled>=5?"めっちゃ書いてくれたな！ありがとう 🔥":filled>=3?"いい記録になったよ 👍":"記録できた！これだけで十分 👍"}</div>
+            <div className="done-meta">{data.destination&&`📍 ${data.destination}`}{data.date&&` ・ ${data.date}`}</div>
+            <div className="done-btns">
+              <button className="btn-export" onClick={handleExport}>📤 テキストをコピーする</button>
+              <button className="btn-new" onClick={handleNew}>🆕 新しい旅ログを書く</button>
+            </div>
+          </div>
+        );
+
+      default: return null;
+    }
+  };
+
+  return (
+    <div className="app">
+      {!isFirst && !isLast && (
+        <div className="header">
+          <div className="header-title">
+            <span className="header-icon">{info.icon}</span>
+            <span className="header-text">{info.title}</span>
+          </div>
+          <div className="progress">
+            {STEPS.map((_, i) => <div key={i} className={`progress-dot${i<=step?" active":""}`} />)}
+          </div>
+        </div>
+      )}
+      <div className="content" ref={contentRef}>
+        {renderContent()}
+      </div>
+      {!isLast && (
+        <div className="nav">
+          {step > 0 ? <button className="nav-back" onClick={goBack}>← もどる</button> : <div/>}
+          <button className="nav-next" onClick={goNext}>{isFirst?"はじめる →":step>=STEPS.length-2?"完了 🎉":"つぎへ →"}</button>
+        </div>
+      )}
+      {copied && <div className="toast">✓ コピーしたよ！</div>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
