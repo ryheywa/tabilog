@@ -572,10 +572,16 @@ function App() {
                 </div>
               )}
               {saved ? (
-                <a href="map.html" className="btn-map">
-                  <span>🗺️</span>
-                  <span>旅マップを見る →</span>
-                </a>
+                <>
+                  <a href="map.html" className="btn-map">
+                    <span>🗺️</span>
+                    <span>旅マップを見る →</span>
+                  </a>
+                  <a href="timeline.html" className="btn-map" style={{background: '#fff7ed', borderColor: '#f97316', color: '#ea580c'}}>
+                    <span>📷</span>
+                    <span>旅のアルバムを見る →</span>
+                  </a>
+                </>
               ) : (
                 <button className="btn-save" onClick={handleSave} disabled={saving || !data.destination}>
                   {saving ? (

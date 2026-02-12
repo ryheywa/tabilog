@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>📷 旅のアルバム</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --orange: #f97316; --orange-dark: #ea580c; --blue: #1e293b; --gray: #64748b; --light: #94a3b8; --border: #e2e8f0; --bg-light: #f8fafc; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Segoe UI", sans-serif; background: var(--bg-light); color: var(--blue); -webkit-font-smoothing: antialiased; margin: 0; padding: 0; }
+
+.app { max-width: 430px; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column; background: #fff; }
+
+/* Header */
+.header { padding: 16px 20px; background: linear-gradient(135deg, var(--orange), var(--orange-dark)); color: #fff; position: sticky; top: 0; z-index: 50; }
+.header-top { display: flex; align-items: center; justify-content: space-between; }
+.header-title { display: flex; align-items: center; gap: 8px; }
+.header-icon { font-size: 24px; }
+.header-text { font-size: 18px; font-weight: 700; }
+.header-links { display: flex; gap: 8px; }
+.header-link { display: flex; align-items: center; gap: 4px; padding: 8px 12px; background: rgba(255,255,255,0.2); border-radius: 99px; color: #fff; text-decoration: none; font-size: 12px; font-weight: 600; }
+.header-link:hover { background: rgba(255,255,255,0.3); }
+
+/* Timeline */
+.timeline { flex: 1; padding: 16px; }
+
+/* Card */
+.card { background: #fff; border-radius: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; border: 1px solid var(--border); }
+.card-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.card-date { font-size: 13px; color: var(--gray); font-weight: 500; }
+.card-mood { font-size: 20px; }
+.card-destination { font-size: 16px; font-weight: 700; color: var(--blue); padding: 12px 16px 8px; }
+
+/* Photo */
+.card-photo-wrapper { position: relative; width: 100%; background: var(--bg-light); cursor: pointer; }
+.card-photo { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
+.card-photo-placeholder { width: 100%; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; background: var(--bg-light); color: var(--light); font-size: 48px; }
+.card-caption { padding: 12px 16px; font-size: 14px; color: var(--blue); line-height: 1.6; }
+
+/* Highlight */
+.card-highlight { margin: 0 16px 12px; padding: 12px; background: #fffbeb; border-radius: 10px; font-size: 13px; color: #92400e; line-height: 1.5; }
+.card-highlight-icon { margin-right: 6px; }
+
+/* Route */
+.card-route { padding: 0 16px 12px; }
+.card-route-title { font-size: 11px; color: var(--gray); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.card-route-stations { display: flex; flex-wrap: wrap; gap: 6px; }
+.card-route-station { font-size: 12px; padding: 4px 10px; background: var(--bg-light); border-radius: 6px; color: var(--gray); }
+.card-route-arrow { color: var(--light); font-size: 10px; display: flex; align-items: center; }
+
+/* Footer actions */
+.card-footer { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-top: 1px solid var(--border); background: var(--bg-light); }
+.card-info { display: flex; gap: 12px; font-size: 12px; color: var(--gray); }
+.card-info-item { display: flex; align-items: center; gap: 4px; }
+.card-delete-btn { padding: 8px 14px; border: 1px solid #fecaca; background: #fef2f2; border-radius: 8px; color: #dc2626; font-size: 12px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+.card-delete-btn:hover { background: #fee2e2; }
+
+/* Empty State */
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; }
+.empty-emoji { font-size: 64px; margin-bottom: 16px; }
+.empty-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: var(--blue); }
+.empty-msg { font-size: 14px; color: var(--gray); margin-bottom: 24px; line-height: 1.6; }
+.empty-btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 24px; background: linear-gradient(135deg, var(--orange), var(--orange-dark)); color: #fff; text-decoration: none; border-radius: 99px; font-size: 14px; font-weight: 700; box-shadow: 0 4px 12px rgba(249,115,22,0.3); }
+
+/* Loading */
+.loading { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; }
+.loading-spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--orange); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 14px; color: var(--gray); }
+
+/* Load More */
+.load-more { padding: 20px; text-align: center; }
+.load-more-btn { padding: 14px 28px; background: #fff; border: 2px solid var(--orange); color: var(--orange); border-radius: 99px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.load-more-btn:hover { background: #fff7ed; }
+.load-more-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Modal */
+.modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 100; display: none; align-items: center; justify-content: center; }
+.modal.active { display: flex; }
+.modal-img { max-width: 95vw; max-height: 90vh; object-fit: contain; border-radius: 8px; }
+.modal-close { position: absolute; top: 20px; right: 20px; width: 44px; height: 44px; background: rgba(255,255,255,0.2); border: none; border-radius: 50%; color: #fff; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+/* Toast */
+.toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: var(--blue); color: #fff; padding: 10px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; z-index: 110; box-shadow: 0 4px 20px rgba(0,0,0,0.2); animation: fadeIn 0.3s; display: none; }
+.toast.error { background: #dc2626; }
+.toast.show { display: block; }
+@keyframes fadeIn { from { opacity:0; transform: translateX(-50%) translateY(10px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+
+/* Safe area */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .timeline { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div class="header-top">
+      <div class="header-title">
+        <span class="header-icon">📷</span>
+        <span class="header-text">旅のアルバム</span>
+      </div>
+      <div class="header-links">
+        <a href="map.html" class="header-link">
+          <span>🗺️</span>
+          <span>マップ</span>
+        </a>
+        <a href="index.html" class="header-link">
+          <span>＋</span>
+          <span>書く</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="timeline" id="timeline">
+    <div class="loading" id="loading">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">読み込み中...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Photo Modal -->
+<div class="modal" id="modal">
+  <button class="modal-close" onclick="closeModal()">&times;</button>
+  <img class="modal-img" id="modal-img" src="" alt="写真">
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================
+// 設定
+// ============================================
+const CONFIG = {
+  GAS_URL: 'https://script.google.com/macros/s/AKfycbzWXxpZToLojg0-mqUJb9SOl1YWwQ3ptWM0SeAmf_FLPqGUMgRF5vkYQikY0tPsTLL7/exec',
+  PAGE_SIZE: 10
+};
+
+// ============================================
+// State
+// ============================================
+let allTrips = [];
+let displayedCount = 0;
+
+// ============================================
+// Initialize
+// ============================================
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadTrips();
+});
+
+// ============================================
+// Load Data
+// ============================================
+async function loadTrips() {
+  try {
+    const response = await fetch(CONFIG.GAS_URL);
+    const result = await response.json();
+
+    if (result.success && result.data) {
+      // 新しい順にソート
+      allTrips = result.data.sort((a, b) => {
+        const dateA = new Date(a.date || a.timestamp);
+        const dateB = new Date(b.date || b.timestamp);
+        return dateB - dateA;
+      });
+    }
+
+    renderTimeline();
+
+  } catch (error) {
+    console.error('Failed to load trips:', error);
+    showError();
+  }
+}
+
+// ============================================
+// Render
+// ============================================
+function renderTimeline() {
+  const container = document.getElementById('timeline');
+  const loading = document.getElementById('loading');
+
+  if (loading) loading.style.display = 'none';
+
+  if (allTrips.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-emoji">📷</div>
+        <div class="empty-title">まだ旅の記録がないよ</div>
+        <div class="empty-msg">旅ログを書くと、ここに写真と一緒に<br>旅の思い出が並んでいくよ！</div>
+        <a href="index.html" class="empty-btn">
+          <span>📝</span>
+          <span>最初の旅ログを書く</span>
+        </a>
+      </div>
+    `;
+    return;
+  }
+
+  // 表示するデータ
+  const toShow = allTrips.slice(0, displayedCount + CONFIG.PAGE_SIZE);
+  displayedCount = toShow.length;
+
+  let html = '';
+
+  toShow.forEach(trip => {
+    html += createCard(trip);
+  });
+
+  // Load Moreボタン
+  if (displayedCount < allTrips.length) {
+    html += `
+      <div class="load-more">
+        <button class="load-more-btn" onclick="loadMore()">
+          もっと見る（あと${allTrips.length - displayedCount}件）
+        </button>
+      </div>
+    `;
+  }
+
+  container.innerHTML = html;
+
+  // Lazy loading for images
+  const images = container.querySelectorAll('img[data-src]');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const img = entry.target;
+        img.src = img.dataset.src;
+        img.removeAttribute('data-src');
+        observer.unobserve(img);
+      }
+    });
+  }, { rootMargin: '200px' });
+
+  images.forEach(img => observer.observe(img));
+}
+
+function createCard(trip) {
+  const moodEmoji = getMoodEmoji(trip.mood);
+  const dateStr = formatDate(trip.date);
+
+  // Photo
+  let photoHtml = '';
+  if (trip.photos && trip.photos[0] && trip.photos[0].url) {
+    photoHtml = `
+      <div class="card-photo-wrapper" onclick="openModal('${escapeHtml(trip.photos[0].url)}')">
+        <img class="card-photo" data-src="${escapeHtml(trip.photos[0].url)}"
+             src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+             alt="旅の写真" loading="lazy">
+      </div>
+    `;
+  } else {
+    photoHtml = `<div class="card-photo-placeholder">🚃</div>`;
+  }
+
+  // Caption
+  const captionHtml = trip.photos && trip.photos[0] && trip.photos[0].caption
+    ? `<div class="card-caption">${escapeHtml(trip.photos[0].caption)}</div>`
+    : '';
+
+  // Highlight
+  const highlightHtml = trip.highlight
+    ? `<div class="card-highlight"><span class="card-highlight-icon">✨</span>${escapeHtml(trip.highlight)}</div>`
+    : '';
+
+  // Routes
+  let routeHtml = '';
+  if (trip.routes && trip.routes.length > 0) {
+    const stationsHtml = trip.routes.map((station, idx) => {
+      if (idx === trip.routes.length - 1) {
+        return `<span class="card-route-station">${escapeHtml(station)}</span>`;
+      }
+      return `<span class="card-route-station">${escapeHtml(station)}</span><span class="card-route-arrow">→</span>`;
+    }).join('');
+
+    routeHtml = `
+      <div class="card-route">
+        <div class="card-route-title">ルート</div>
+        <div class="card-route-stations">${stationsHtml}</div>
+      </div>
+    `;
+  }
+
+  // Info items
+  const weatherIcon = getWeatherIcon(trip.weather);
+  const companionIcon = getCompanionIcon(trip.companion);
+
+  return `
+    <div class="card" data-id="${trip.id}">
+      <div class="card-header">
+        <span class="card-date">${dateStr}</span>
+        ${moodEmoji ? `<span class="card-mood">${moodEmoji}</span>` : ''}
+      </div>
+      <div class="card-destination">${escapeHtml(trip.destination)}</div>
+      ${photoHtml}
+      ${captionHtml}
+      ${highlightHtml}
+      ${routeHtml}
+      <div class="card-footer">
+        <div class="card-info">
+          ${weatherIcon ? `<span class="card-info-item">${weatherIcon}</span>` : ''}
+          ${companionIcon ? `<span class="card-info-item">${companionIcon}</span>` : ''}
+        </div>
+        <button class="card-delete-btn" onclick="deleteTrip(${trip.id})">
+          <span>🗑</span>
+          <span>削除</span>
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function loadMore() {
+  renderTimeline();
+}
+
+// ============================================
+// Delete
+// ============================================
+async function deleteTrip(id) {
+  if (!confirm('この旅ログを削除しますか？\n（写真も一緒に削除されます）')) {
+    return;
+  }
+
+  try {
+    await fetch(CONFIG.GAS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'delete', id: id })
+    });
+
+    // UIから削除
+    allTrips = allTrips.filter(t => t.id !== id);
+    displayedCount = Math.max(0, displayedCount - 1);
+
+    // カードをアニメーションで消す
+    const card = document.querySelector(`.card[data-id="${id}"]`);
+    if (card) {
+      card.style.transition = 'all 0.3s ease';
+      card.style.opacity = '0';
+      card.style.transform = 'scale(0.9)';
+      setTimeout(() => {
+        renderTimeline();
+      }, 300);
+    } else {
+      renderTimeline();
+    }
+
+    showToast('削除しました');
+
+  } catch (error) {
+    console.error('Delete error:', error);
+    showToast('削除に失敗しました', true);
+  }
+}
+
+// ============================================
+// Modal
+// ============================================
+function openModal(url) {
+  const modal = document.getElementById('modal');
+  const img = document.getElementById('modal-img');
+  img.src = url;
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  const modal = document.getElementById('modal');
+  modal.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+// Close on background click
+document.getElementById('modal').addEventListener('click', (e) => {
+  if (e.target.id === 'modal') {
+    closeModal();
+  }
+});
+
+// Close on Escape key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeModal();
+  }
+});
+
+// ============================================
+// Helpers
+// ============================================
+function getMoodEmoji(mood) {
+  const map = {
+    '最高！': '😆',
+    '楽しかった': '😊',
+    'まあまあ': '😌',
+    'ふつう': '😐',
+    'つかれた…': '😫'
+  };
+  return map[mood] || '';
+}
+
+function getWeatherIcon(weather) {
+  const map = {
+    '晴れ': '☀️',
+    'くもり': '☁️',
+    '雨': '🌧️',
+    '雪': '❄️'
+  };
+  return map[weather] || '';
+}
+
+function getCompanionIcon(companion) {
+  const map = {
+    '一人': '🧍',
+    '家族': '👨‍👩‍👦',
+    '友だち': '👥'
+  };
+  return map[companion] || '';
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  const year = d.getFullYear();
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+  const weekday = ['日', '月', '火', '水', '木', '金', '土'][d.getDay()];
+  return `${year}/${month}/${day}（${weekday}）`;
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function showError() {
+  const container = document.getElementById('timeline');
+  container.innerHTML = `
+    <div class="empty-state">
+      <div class="empty-emoji">⚠️</div>
+      <div class="empty-title">読み込めませんでした</div>
+      <div class="empty-msg">ネットワーク接続を確認して<br>もう一度お試しください</div>
+      <button class="empty-btn" onclick="location.reload()">
+        <span>🔄</span>
+        <span>再読み込み</span>
+      </button>
+    </div>
+  `;
+}
+
+function showToast(message, isError = false) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.className = isError ? 'toast error show' : 'toast show';
+  setTimeout(() => {
+    toast.classList.remove('show');
+  }, 2500);
+}
+</script>
+</body>
+</html>

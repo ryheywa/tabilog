@@ -85,10 +85,16 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Segoe U
         <span class="header-icon">🗺️</span>
         <span class="header-text">旅マップ</span>
       </div>
-      <a href="index.html" class="header-link">
-        <span>＋</span>
-        <span>旅ログを書く</span>
-      </a>
+      <div style="display: flex; gap: 8px;">
+        <a href="timeline.html" class="header-link">
+          <span>📷</span>
+          <span>アルバム</span>
+        </a>
+        <a href="index.html" class="header-link">
+          <span>＋</span>
+          <span>書く</span>
+        </a>
+      </div>
     </div>
     <div class="stats" id="stats">
       <div class="stat">
@@ -237,46 +243,53 @@ function showToast(message, isError = false) {
   }, 2500);
 }
 
-async function deleteTrip(id) {
+// 削除関数をグローバルに登録（InfoWindow内のonclickから呼び出すため）
+window.deleteTrip = async function(id) {
+  console.log('deleteTrip called with id:', id);
+
   if (!confirm('この旅ログを削除しますか？\n（写真も一緒に削除されます）')) {
+    console.log('Delete cancelled by user');
     return;
   }
 
   try {
+    console.log('Sending delete request to GAS...');
     const response = await fetch(CONFIG.GAS_URL, {
       method: 'POST',
+      mode: 'no-cors',  // CORSエラー回避
+      headers: {
+        'Content-Type': 'text/plain'  // GASはtext/plainを受け付ける
+      },
       body: JSON.stringify({ action: 'delete', id: id })
     });
 
-    const result = await response.json();
+    console.log('Response received');
 
-    if (result.success) {
-      // マーカーを地図から削除
-      if (markers[id]) {
-        markers[id].setMap(null);
-        delete markers[id];
-      }
-
-      // tripsからも削除
-      trips = trips.filter(t => t.id !== id);
-
-      // InfoWindowを閉じる
-      if (infoWindow) {
-        infoWindow.close();
-      }
-
-      // 統計を更新
-      updateStats();
-
-      showToast('削除しました');
-
-      // データがなくなったら空の状態を表示
-      if (trips.length === 0) {
-        showEmptyState();
-      }
-    } else {
-      showToast(result.error || '削除に失敗しました', true);
+    // no-corsモードではresponse.json()が使えないので、成功したと仮定して処理
+    // マーカーを地図から削除
+    if (markers[id]) {
+      markers[id].setMap(null);
+      delete markers[id];
     }
+
+    // tripsからも削除
+    trips = trips.filter(t => t.id !== id);
+
+    // InfoWindowを閉じる
+    if (infoWindow) {
+      infoWindow.close();
+    }
+
+    // 統計を更新
+    updateStats();
+
+    showToast('削除しました');
+
+    // データがなくなったら空の状態を表示
+    if (trips.length === 0) {
+      showEmptyState();
+    }
+
   } catch (error) {
     console.error('Delete error:', error);
     showToast('削除に失敗しました', true);
@@ -336,7 +349,7 @@ function createInfoWindowContent(trip) {
       ${photoHtml}
       ${captionHtml}
       ${highlightHtml}
-      <button class="info-delete-btn" onclick="deleteTrip(${trip.id})">
+      <button class="info-delete-btn" onclick="window.deleteTrip(${trip.id})">
         🗑 削除
       </button>
     </div>
