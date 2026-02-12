@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>🗺️ 旅マップ</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --orange: #f97316; --orange-dark: #ea580c; --blue: #1e293b; --gray: #64748b; --light: #94a3b8; --border: #e2e8f0; --bg-light: #f8fafc; --bg-selected: #fff7ed; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Segoe UI", sans-serif; background: #fff; color: var(--blue); -webkit-font-smoothing: antialiased; margin: 0; padding: 0; }
+
+.app { max-width: 430px; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column; position: relative; }
+
+/* Header */
+.header { padding: 16px 20px; background: linear-gradient(135deg, var(--orange), var(--orange-dark)); color: #fff; }
+.header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.header-title { display: flex; align-items: center; gap: 8px; }
+.header-icon { font-size: 24px; }
+.header-text { font-size: 18px; font-weight: 700; }
+.header-link { display: flex; align-items: center; gap: 4px; padding: 8px 12px; background: rgba(255,255,255,0.2); border-radius: 99px; color: #fff; text-decoration: none; font-size: 12px; font-weight: 600; }
+.header-link:hover { background: rgba(255,255,255,0.3); }
+
+/* Stats */
+.stats { display: flex; gap: 16px; }
+.stat { display: flex; align-items: baseline; gap: 4px; }
+.stat-num { font-size: 28px; font-weight: 900; }
+.stat-label { font-size: 12px; opacity: 0.9; }
+
+/* Map Container */
+.map-container { flex: 1; position: relative; min-height: 400px; }
+#map { width: 100%; height: 100%; min-height: 400px; }
+
+/* Loading */
+.loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: var(--gray); }
+.loading-spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--orange); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Empty State */
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center; }
+.empty-emoji { font-size: 64px; margin-bottom: 16px; }
+.empty-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: var(--blue); }
+.empty-msg { font-size: 14px; color: var(--gray); margin-bottom: 24px; line-height: 1.6; }
+.empty-btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 24px; background: linear-gradient(135deg, var(--orange), var(--orange-dark)); color: #fff; text-decoration: none; border-radius: 99px; font-size: 14px; font-weight: 700; box-shadow: 0 4px 12px rgba(249,115,22,0.3); }
+
+/* Footer */
+.footer { padding: 16px 20px; background: var(--bg-light); border-top: 1px solid var(--border); }
+.footer-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 14px; background: linear-gradient(135deg, var(--orange), var(--orange-dark)); color: #fff; text-decoration: none; border-radius: 12px; font-size: 14px; font-weight: 700; box-shadow: 0 4px 12px rgba(249,115,22,0.3); }
+
+/* InfoWindow Styles (injected via JS) */
+.info-window { max-width: 260px; font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif; }
+.info-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.info-date { font-size: 12px; color: #64748b; }
+.info-mood { font-size: 18px; }
+.info-destination { font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 8px; }
+.info-photo { width: 100%; max-height: 150px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; }
+.info-caption { font-size: 13px; color: #475569; margin-bottom: 8px; line-height: 1.5; }
+.info-highlight { font-size: 12px; color: #64748b; padding: 8px; background: #f8fafc; border-radius: 6px; line-height: 1.5; }
+.info-highlight-icon { margin-right: 4px; }
+
+/* Error state */
+.error-state { padding: 40px 20px; text-align: center; color: var(--gray); }
+.error-icon { font-size: 48px; margin-bottom: 12px; }
+.error-msg { font-size: 14px; line-height: 1.6; }
+
+/* Safe area */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .footer { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div class="header-top">
+      <div class="header-title">
+        <span class="header-icon">🗺️</span>
+        <span class="header-text">旅マップ</span>
+      </div>
+      <a href="index.html" class="header-link">
+        <span>＋</span>
+        <span>旅ログを書く</span>
+      </a>
+    </div>
+    <div class="stats" id="stats">
+      <div class="stat">
+        <span class="stat-num" id="trip-count">-</span>
+        <span class="stat-label">回の旅</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num" id="pref-count">-</span>
+        <span class="stat-label">都道府県</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="map-container" id="map-container">
+    <div class="loading" id="loading">
+      <div class="loading-spinner"></div>
+      <div>読み込み中...</div>
+    </div>
+    <div id="map"></div>
+  </div>
+
+  <footer class="footer">
+    <a href="index.html" class="footer-btn">
+      <span>📝</span>
+      <span>新しい旅ログを書く</span>
+    </a>
+  </footer>
+</div>
+
+<!-- Google Maps API（APIキーを設定してください） -->
+<script>
+// ============================================
+// 設定（デプロイ前に変更してください）
+// ============================================
+const CONFIG = {
+  GAS_URL: 'https://script.google.com/macros/s/AKfycbzWXxpZToLojg0-mqUJb9SOl1YWwQ3ptWM0SeAmf_FLPqGUMgRF5vkYQikY0tPsTLL7/exec',
+  MAPS_API_KEY: 'AIzaSyBsZufFWHnfHmh8Ew8PJtLarnPPG2DLs1k'
+};
+
+// ============================================
+// アプリケーション
+// ============================================
+let map = null;
+let trips = [];
+
+// 都道府県判定用（簡易版：緯度経度から概算）
+const PREF_BOUNDS = {
+  '北海道': { minLat: 41.3, maxLat: 45.6, minLng: 139.3, maxLng: 145.8 },
+  '青森': { minLat: 40.2, maxLat: 41.6, minLng: 139.5, maxLng: 141.7 },
+  '岩手': { minLat: 38.7, maxLat: 40.5, minLng: 140.6, maxLng: 142.1 },
+  '宮城': { minLat: 37.8, maxLat: 39.0, minLng: 140.2, maxLng: 141.7 },
+  '秋田': { minLat: 39.0, maxLat: 40.5, minLng: 139.7, maxLng: 140.7 },
+  '山形': { minLat: 37.7, maxLat: 39.2, minLng: 139.5, maxLng: 140.7 },
+  '福島': { minLat: 36.8, maxLat: 38.0, minLng: 139.2, maxLng: 141.1 },
+  '茨城': { minLat: 35.7, maxLat: 36.9, minLng: 139.7, maxLng: 140.9 },
+  '栃木': { minLat: 36.2, maxLat: 37.2, minLng: 139.3, maxLng: 140.3 },
+  '群馬': { minLat: 36.0, maxLat: 37.1, minLng: 138.4, maxLng: 139.7 },
+  '埼玉': { minLat: 35.7, maxLat: 36.3, minLng: 138.7, maxLng: 139.9 },
+  '千葉': { minLat: 34.9, maxLat: 36.1, minLng: 139.7, maxLng: 140.9 },
+  '東京': { minLat: 35.5, maxLat: 35.9, minLng: 138.9, maxLng: 139.9 },
+  '神奈川': { minLat: 35.1, maxLat: 35.7, minLng: 138.9, maxLng: 139.8 },
+  '新潟': { minLat: 36.7, maxLat: 38.6, minLng: 137.8, maxLng: 140.0 },
+  '富山': { minLat: 36.3, maxLat: 36.9, minLng: 136.8, maxLng: 137.8 },
+  '石川': { minLat: 36.1, maxLat: 37.9, minLng: 136.2, maxLng: 137.4 },
+  '福井': { minLat: 35.4, maxLat: 36.3, minLng: 135.5, maxLng: 136.8 },
+  '山梨': { minLat: 35.2, maxLat: 35.9, minLng: 138.2, maxLng: 139.2 },
+  '長野': { minLat: 35.2, maxLat: 37.0, minLng: 137.3, maxLng: 138.8 },
+  '岐阜': { minLat: 35.1, maxLat: 36.5, minLng: 136.3, maxLng: 137.7 },
+  '静岡': { minLat: 34.6, maxLat: 35.6, minLng: 137.5, maxLng: 139.2 },
+  '愛知': { minLat: 34.6, maxLat: 35.4, minLng: 136.7, maxLng: 137.8 },
+  '三重': { minLat: 33.7, maxLat: 35.2, minLng: 135.9, maxLng: 137.0 },
+  '滋賀': { minLat: 34.8, maxLat: 35.7, minLng: 135.8, maxLng: 136.5 },
+  '京都': { minLat: 34.8, maxLat: 35.8, minLng: 135.0, maxLng: 136.1 },
+  '大阪': { minLat: 34.3, maxLat: 35.1, minLng: 135.1, maxLng: 135.8 },
+  '兵庫': { minLat: 34.2, maxLat: 35.7, minLng: 134.3, maxLng: 135.5 },
+  '奈良': { minLat: 33.9, maxLat: 34.8, minLng: 135.6, maxLng: 136.2 },
+  '和歌山': { minLat: 33.4, maxLat: 34.4, minLng: 135.0, maxLng: 136.0 },
+  '鳥取': { minLat: 35.1, maxLat: 35.6, minLng: 133.2, maxLng: 134.5 },
+  '島根': { minLat: 34.3, maxLat: 37.3, minLng: 131.7, maxLng: 133.4 },
+  '岡山': { minLat: 34.4, maxLat: 35.3, minLng: 133.4, maxLng: 134.5 },
+  '広島': { minLat: 34.0, maxLat: 35.0, minLng: 132.0, maxLng: 133.5 },
+  '山口': { minLat: 33.7, maxLat: 34.8, minLng: 130.8, maxLng: 132.2 },
+  '徳島': { minLat: 33.5, maxLat: 34.3, minLng: 133.5, maxLng: 134.8 },
+  '香川': { minLat: 34.1, maxLat: 34.5, minLng: 133.6, maxLng: 134.5 },
+  '愛媛': { minLat: 32.9, maxLat: 34.2, minLng: 132.0, maxLng: 133.7 },
+  '高知': { minLat: 32.7, maxLat: 33.9, minLng: 132.5, maxLng: 134.3 },
+  '福岡': { minLat: 33.0, maxLat: 33.9, minLng: 130.0, maxLng: 131.2 },
+  '佐賀': { minLat: 33.0, maxLat: 33.6, minLng: 129.7, maxLng: 130.5 },
+  '長崎': { minLat: 32.5, maxLat: 34.7, minLng: 128.6, maxLng: 130.4 },
+  '熊本': { minLat: 32.0, maxLat: 33.2, minLng: 130.1, maxLng: 131.3 },
+  '大分': { minLat: 32.7, maxLat: 33.8, minLng: 130.8, maxLng: 132.1 },
+  '宮崎': { minLat: 31.4, maxLat: 32.9, minLng: 130.7, maxLng: 131.9 },
+  '鹿児島': { minLat: 27.0, maxLat: 32.4, minLng: 128.4, maxLng: 131.2 },
+  '沖縄': { minLat: 24.0, maxLat: 27.9, minLng: 122.9, maxLng: 131.3 },
+};
+
+function getPrefecture(lat, lng) {
+  for (const [pref, bounds] of Object.entries(PREF_BOUNDS)) {
+    if (lat >= bounds.minLat && lat <= bounds.maxLat &&
+        lng >= bounds.minLng && lng <= bounds.maxLng) {
+      return pref;
+    }
+  }
+  return null;
+}
+
+function countPrefectures(trips) {
+  const prefs = new Set();
+  trips.forEach(trip => {
+    const pref = getPrefecture(trip.lat, trip.lng);
+    if (pref) prefs.add(pref);
+  });
+  return prefs.size;
+}
+
+async function loadTrips() {
+  try {
+    const response = await fetch(CONFIG.GAS_URL);
+    const result = await response.json();
+
+    if (result.success && result.data) {
+      return result.data;
+    }
+    return [];
+  } catch (error) {
+    console.error('Failed to load trips:', error);
+    return [];
+  }
+}
+
+function createMarkerIcon(mood) {
+  // カスタムマーカー（SVG）
+  const moodEmoji = mood || '📍';
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="50" viewBox="0 0 40 50">
+      <defs>
+        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.3"/>
+        </filter>
+      </defs>
+      <path d="M20 0 C8.954 0 0 8.954 0 20 C0 35 20 50 20 50 C20 50 40 35 40 20 C40 8.954 31.046 0 20 0 Z"
+            fill="#f97316" filter="url(#shadow)"/>
+      <circle cx="20" cy="18" r="14" fill="white"/>
+      <text x="20" y="23" text-anchor="middle" font-size="16">${moodEmoji === '最高！' ? '😆' : moodEmoji === '楽しかった' ? '😊' : moodEmoji === 'まあまあ' ? '😌' : moodEmoji === 'ふつう' ? '😐' : moodEmoji === 'つかれた…' ? '😫' : '🚃'}</text>
+    </svg>
+  `;
+
+  return {
+    url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
+    scaledSize: new google.maps.Size(40, 50),
+    anchor: new google.maps.Point(20, 50)
+  };
+}
+
+function createInfoWindowContent(trip) {
+  const photoHtml = trip.photos && trip.photos[0] && trip.photos[0].url
+    ? `<img class="info-photo" src="${trip.photos[0].url}" alt="写真" onerror="this.style.display='none'">`
+    : '';
+
+  const captionHtml = trip.photos && trip.photos[0] && trip.photos[0].caption
+    ? `<div class="info-caption">${escapeHtml(trip.photos[0].caption)}</div>`
+    : '';
+
+  const highlightHtml = trip.highlight
+    ? `<div class="info-highlight"><span class="info-highlight-icon">✨</span>${escapeHtml(trip.highlight)}</div>`
+    : '';
+
+  const moodEmoji = trip.mood === '最高！' ? '😆'
+    : trip.mood === '楽しかった' ? '😊'
+    : trip.mood === 'まあまあ' ? '😌'
+    : trip.mood === 'ふつう' ? '😐'
+    : trip.mood === 'つかれた…' ? '😫'
+    : '';
+
+  return `
+    <div class="info-window">
+      <div class="info-header">
+        <span class="info-date">${formatDate(trip.date)}</span>
+        ${moodEmoji ? `<span class="info-mood">${moodEmoji}</span>` : ''}
+      </div>
+      <div class="info-destination">${escapeHtml(trip.destination)}</div>
+      ${photoHtml}
+      ${captionHtml}
+      ${highlightHtml}
+    </div>
+  `;
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function showEmptyState() {
+  const container = document.getElementById('map-container');
+  container.innerHTML = `
+    <div class="empty-state">
+      <div class="empty-emoji">🗺️</div>
+      <div class="empty-title">まだ旅の記録がないよ</div>
+      <div class="empty-msg">旅ログを書くと、ここにピンが増えていくよ！<br>日本地図を自分の旅で埋めよう 🚃</div>
+      <a href="index.html" class="empty-btn">
+        <span>📝</span>
+        <span>最初の旅ログを書く</span>
+      </a>
+    </div>
+  `;
+}
+
+function showError(message) {
+  const container = document.getElementById('map-container');
+  container.innerHTML = `
+    <div class="error-state">
+      <div class="error-icon">⚠️</div>
+      <div class="error-msg">${message}</div>
+    </div>
+  `;
+}
+
+async function initMap() {
+  const loading = document.getElementById('loading');
+
+  // データ読み込み
+  trips = await loadTrips();
+
+  loading.style.display = 'none';
+
+  // 統計を更新
+  document.getElementById('trip-count').textContent = trips.length;
+  document.getElementById('pref-count').textContent = countPrefectures(trips);
+
+  if (trips.length === 0) {
+    showEmptyState();
+    return;
+  }
+
+  // 地図を初期化（日本中心）
+  map = new google.maps.Map(document.getElementById('map'), {
+    center: { lat: 36.5, lng: 138.0 },
+    zoom: 5,
+    mapTypeControl: false,
+    streetViewControl: false,
+    fullscreenControl: false,
+    styles: [
+      {
+        featureType: 'poi',
+        elementType: 'labels',
+        stylers: [{ visibility: 'off' }]
+      }
+    ]
+  });
+
+  // マーカーとInfoWindowを追加
+  const infoWindow = new google.maps.InfoWindow();
+  const bounds = new google.maps.LatLngBounds();
+
+  trips.forEach(trip => {
+    if (!trip.lat || !trip.lng) return;
+
+    const position = { lat: parseFloat(trip.lat), lng: parseFloat(trip.lng) };
+    bounds.extend(position);
+
+    const marker = new google.maps.Marker({
+      position: position,
+      map: map,
+      icon: createMarkerIcon(trip.mood),
+      title: trip.destination
+    });
+
+    marker.addListener('click', () => {
+      infoWindow.setContent(createInfoWindowContent(trip));
+      infoWindow.open(map, marker);
+    });
+  });
+
+  // 全マーカーが見えるように調整
+  if (trips.length === 1) {
+    map.setCenter(bounds.getCenter());
+    map.setZoom(10);
+  } else {
+    map.fitBounds(bounds, { padding: 50 });
+  }
+}
+
+// InfoWindow用のスタイルを動的に追加
+function addInfoWindowStyles() {
+  const style = document.createElement('style');
+  style.textContent = `
+    .gm-style-iw-c { padding: 12px !important; border-radius: 12px !important; }
+    .gm-style-iw-d { overflow: hidden !important; }
+    .gm-style-iw-tc { display: none !important; }
+    .gm-ui-hover-effect { top: 4px !important; right: 4px !important; }
+  `;
+  document.head.appendChild(style);
+}
+
+// Google Maps API読み込み後に実行
+function loadGoogleMapsAPI() {
+  if (CONFIG.MAPS_API_KEY === 'YOUR_GOOGLE_MAPS_API_KEY_HERE') {
+    showError('Google Maps APIキーが設定されていません。<br>SETUP.md の手順に従って設定してください。');
+    document.getElementById('loading').style.display = 'none';
+    return;
+  }
+
+  const script = document.createElement('script');
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${CONFIG.MAPS_API_KEY}&callback=initMap`;
+  script.async = true;
+  script.defer = true;
+  document.head.appendChild(script);
+
+  addInfoWindowStyles();
+}
+
+// 起動
+document.addEventListener('DOMContentLoaded', () => {
+  if (CONFIG.GAS_URL === 'YOUR_GAS_WEB_APP_URL_HERE') {
+    showError('GASのURLが設定されていません。<br>SETUP.md の手順に従って設定してください。');
+    document.getElementById('loading').style.display = 'none';
+    return;
+  }
+
+  loadGoogleMapsAPI();
+});
+</script>
+</body>
+</html>
