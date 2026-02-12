@@ -12,9 +12,9 @@
 // 設定（デプロイ前に変更してください）
 // ============================================
 const CONFIG = {
-  SPREADSHEET_ID: 'YOUR_SPREADSHEET_ID_HERE',  // Google Sheets ID
-  DRIVE_FOLDER_ID: 'YOUR_DRIVE_FOLDER_ID_HERE', // Google Drive フォルダID
-  SHEET_NAME: '旅ログデータ'  // シート名
+  SPREADSHEET_ID: '1v2nQJq87srDc_Xrss9CYVC8Re_R1FGzpypzAwNwPCGU',
+  DRIVE_FOLDER_ID: '1AKbLEIy-1kcddNdDKzJqVhoZmucOsoEs',
+  SHEET_NAME: '旅ログデータ'
 };
 
 // ============================================
@@ -26,15 +26,37 @@ const CONFIG = {
  */
 function doPost(e) {
   try {
+    console.log('doPost called');
     const data = JSON.parse(e.postData.contents);
+    console.log('Received data:', JSON.stringify(data).substring(0, 500));
 
     // スプレッドシートを開く
     const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+    console.log('Spreadsheet opened:', ss.getName());
+
+    // まず既存のシートを探す（「シート1」も含めて）
     let sheet = ss.getSheetByName(CONFIG.SHEET_NAME);
 
-    // シートがなければ作成
+    // シートがなければ作成（または「シート1」をリネーム）
     if (!sheet) {
-      sheet = ss.insertSheet(CONFIG.SHEET_NAME);
+      console.log('Sheet not found, checking for シート1...');
+      const sheet1 = ss.getSheetByName('シート1');
+      if (sheet1) {
+        // シート1が空なら名前を変更して使う
+        if (sheet1.getLastRow() <= 1) {
+          sheet1.setName(CONFIG.SHEET_NAME);
+          sheet = sheet1;
+          console.log('Renamed シート1 to:', CONFIG.SHEET_NAME);
+        } else {
+          // シート1にデータがある場合は新しいシートを作成
+          sheet = ss.insertSheet(CONFIG.SHEET_NAME);
+          console.log('Created new sheet:', CONFIG.SHEET_NAME);
+        }
+      } else {
+        sheet = ss.insertSheet(CONFIG.SHEET_NAME);
+        console.log('Created new sheet:', CONFIG.SHEET_NAME);
+      }
+
       // ヘッダー行を追加
       sheet.appendRow([
         'タイムスタンプ', '日付', '行き先', '天気', '誰と',
@@ -46,17 +68,22 @@ function doPost(e) {
         'ハイライト', '発見・気づき',
         '緯度', '経度'
       ]);
+      console.log('Header row added');
     }
 
     // 画像を保存してURLを取得
     const photoUrls = [];
     const photoCaptions = [];
 
+    console.log('Processing photos, count:', data.photos ? data.photos.length : 0);
+
     if (data.photos && Array.isArray(data.photos)) {
       for (let i = 0; i < Math.min(data.photos.length, 3); i++) {
         const photo = data.photos[i];
         if (photo && photo.image && photo.image.startsWith('data:image')) {
+          console.log('Saving image', i + 1, 'size:', photo.image.length);
           const url = saveImageToDrive(photo.image, data.date, i + 1);
+          console.log('Image saved, URL:', url);
           photoUrls.push(url);
           photoCaptions.push(photo.caption || '');
         } else {
@@ -76,10 +103,14 @@ function doPost(e) {
     let lat = '';
     let lng = '';
     if (data.destination) {
+      console.log('Geocoding destination:', data.destination);
       const coords = geocode(data.destination);
       if (coords) {
         lat = coords.lat;
         lng = coords.lng;
+        console.log('Geocode result:', lat, lng);
+      } else {
+        console.log('Geocode failed');
       }
     }
 
@@ -103,12 +134,15 @@ function doPost(e) {
       lng
     ];
 
+    console.log('Appending row to sheet...');
     sheet.appendRow(row);
+    console.log('Row appended successfully');
 
     return createJsonResponse({ success: true, message: '保存しました！' });
 
   } catch (error) {
     console.error('Error in doPost:', error);
+    console.error('Error stack:', error.stack);
     return createJsonResponse({ success: false, error: error.message });
   }
 }
@@ -119,7 +153,12 @@ function doPost(e) {
 function doGet(e) {
   try {
     const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-    const sheet = ss.getSheetByName(CONFIG.SHEET_NAME);
+
+    // 「旅ログデータ」シートを探す、なければ「シート1」も試す
+    let sheet = ss.getSheetByName(CONFIG.SHEET_NAME);
+    if (!sheet) {
+      sheet = ss.getSheetByName('シート1');
+    }
 
     if (!sheet) {
       return createJsonResponse({ success: true, data: [] });
@@ -177,6 +216,7 @@ function doGet(e) {
 
 /**
  * Base64画像をGoogle Driveに保存
+ * 問題1修正: lh3.googleusercontent.com形式のURLを返す
  */
 function saveImageToDrive(base64Data, date, photoNum) {
   try {
@@ -195,12 +235,14 @@ function saveImageToDrive(base64Data, date, photoNum) {
     );
 
     const file = folder.createFile(blob);
+    const fileId = file.getId();
 
     // 「リンクを知っている全員が閲覧可」に設定
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
 
-    // 直接表示可能なURLを返す
-    return `https://drive.google.com/uc?id=${file.getId()}`;
+    // CORS制限を回避するため、lh3.googleusercontent.com形式のURLを返す
+    // この形式はimgタグで直接表示可能
+    return `https://lh3.googleusercontent.com/d/${fileId}`;
 
   } catch (error) {
     console.error('Error saving image:', error);
@@ -210,21 +252,56 @@ function saveImageToDrive(base64Data, date, photoNum) {
 
 /**
  * 住所から緯度経度を取得（Geocoding）
+ * 問題2修正: 駅を優先的に検索、精度向上
  */
 function geocode(address) {
   try {
-    // 日本の地名として検索
-    const searchAddress = address + ' 日本';
-    const geocoder = Maps.newGeocoder().setLanguage('ja');
-    const response = geocoder.geocode(searchAddress);
+    // 検索クエリを作成
+    // 1. 「駅」が含まれていない場合は「駅」を追加して検索
+    // 2. 日本を指定して検索精度を向上
+    let searchQueries = [];
 
-    if (response.status === 'OK' && response.results.length > 0) {
-      const location = response.results[0].geometry.location;
-      return {
-        lat: location.lat,
-        lng: location.lng
-      };
+    // 元の入力に「駅」が含まれていない場合、駅を追加したバージョンを優先
+    if (!address.includes('駅')) {
+      searchQueries.push(address + '駅 日本');
     }
+    // 元の入力そのまま + 日本
+    searchQueries.push(address + ' 日本');
+
+    const geocoder = Maps.newGeocoder()
+      .setLanguage('ja')
+      .setRegion('jp');  // 日本に限定
+
+    for (const query of searchQueries) {
+      console.log('Trying geocode query:', query);
+      const response = geocoder.geocode(query);
+
+      if (response.status === 'OK' && response.results.length > 0) {
+        // 結果の中から最も適切なものを選ぶ
+        // transit_station（鉄道駅）があれば優先
+        let bestResult = response.results[0];
+
+        for (const result of response.results) {
+          const types = result.types || [];
+          if (types.includes('transit_station') ||
+              types.includes('train_station') ||
+              types.includes('subway_station')) {
+            bestResult = result;
+            console.log('Found station result:', result.formatted_address);
+            break;
+          }
+        }
+
+        const location = bestResult.geometry.location;
+        console.log('Using result:', bestResult.formatted_address);
+        return {
+          lat: location.lat,
+          lng: location.lng
+        };
+      }
+    }
+
+    console.log('Geocoding failed for all queries');
     return null;
   } catch (error) {
     console.error('Geocoding error:', error);
@@ -265,6 +342,11 @@ function testConnection() {
     const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
     console.log('スプレッドシート接続OK: ' + ss.getName());
 
+    // シート一覧を表示
+    const sheets = ss.getSheets();
+    console.log('シート一覧:');
+    sheets.forEach(s => console.log('  - ' + s.getName()));
+
     const folder = DriveApp.getFolderById(CONFIG.DRIVE_FOLDER_ID);
     console.log('Driveフォルダ接続OK: ' + folder.getName());
 
@@ -280,9 +362,67 @@ function testConnection() {
  * ジオコーディングテスト
  */
 function testGeocode() {
-  const result = geocode('仙台');
-  console.log('仙台の座標:', result);
+  console.log('=== Geocoding Test ===');
 
-  const result2 = geocode('東京駅');
-  console.log('東京駅の座標:', result2);
+  const tests = ['池袋', '仙台', '東京駅', '新宿', '渋谷'];
+
+  tests.forEach(place => {
+    const result = geocode(place);
+    console.log(`${place}: `, result ? `${result.lat}, ${result.lng}` : 'failed');
+  });
 }
+
+/**
+ * 既存データの画像URLを新形式に変換（一度だけ実行）
+ */
+function migrateImageUrls() {
+  const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  let sheet = ss.getSheetByName(CONFIG.SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.getSheetByName('シート1');
+  }
+  if (!sheet) {
+    console.log('シートが見つかりません');
+    return;
+  }
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) {
+    console.log('データがありません');
+    return;
+  }
+
+  // 写真URL列（7, 9, 11）を取得して変換
+  const urlColumns = [7, 9, 11];
+
+  for (let row = 2; row <= lastRow; row++) {
+    for (const col of urlColumns) {
+      const cell = sheet.getRange(row, col);
+      const url = cell.getValue();
+
+      if (url && url.includes('drive.google.com/uc?id=')) {
+        // 旧形式から新形式に変換
+        const match = url.match(/id=([a-zA-Z0-9_-]+)/);
+        if (match) {
+          const fileId = match[1];
+          const newUrl = `https://lh3.googleusercontent.com/d/${fileId}`;
+          cell.setValue(newUrl);
+          console.log(`Row ${row}, Col ${col}: Updated URL`);
+        }
+      }
+    }
+  }
+
+  console.log('Migration complete');
+}
+
+/**
+ * GASの実行ログを確認する方法：
+ * 1. GASエディタで左メニューの「実行数」をクリック
+ * 2. 実行された関数の一覧が表示される
+ * 3. 各実行をクリックすると詳細ログが表示される
+ *
+ * または、リアルタイムで確認する場合：
+ * 1. GASエディタで「表示」→「ログ」
+ * 2. テスト関数を実行するとログが表示される
+ */
