@@ -132,6 +132,7 @@ textarea.text-input { resize: none; line-height: 1.6; }
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exifr/dist/full.umd.js"></script>
 
 <script type="text/babel">
 const { useState, useRef, useEffect } = React;
@@ -190,7 +191,7 @@ function App() {
     weather: "",
     companion: "",
     routes: [{ from:"", dep:"", to:"", arr:"", line:"" }],
-    photos: [{ caption:"", image:null }, { caption:"", image:null }],
+    photos: [{ caption:"", image:null, lat:null, lng:null }, { caption:"", image:null, lat:null, lng:null }],
     senses: {},
     food: "",
     mood: "",
@@ -259,14 +260,33 @@ function App() {
       const resizedPhotos = await Promise.all(
         data.photos.map(async (p) => ({
           caption: p.caption,
-          image: await resizeImage(p.image)
+          image: await resizeImage(p.image),
+          lat: p.lat,
+          lng: p.lng
         }))
       );
 
+      // 最初のGPS情報を持つ写真から緯度経度を取得
+      console.log('=== DEBUG: handleSave ===');
+      console.log('data.photos:', data.photos);
+      console.log('Photos with GPS:', data.photos.filter(p => p.lat && p.lng));
+
+      const photoWithGps = data.photos.find(p => p.lat && p.lng);
+      const gpsLat = photoWithGps ? photoWithGps.lat : null;
+      const gpsLng = photoWithGps ? photoWithGps.lng : null;
+
+      console.log('photoWithGps:', photoWithGps);
+      console.log('gpsLat:', gpsLat, 'gpsLng:', gpsLng);
+
       const payload = {
         ...data,
-        photos: resizedPhotos.filter(p => p.image || p.caption)
+        photos: resizedPhotos.filter(p => p.image || p.caption),
+        gpsLat,  // EXIF GPSから取得した緯度
+        gpsLng   // EXIF GPSから取得した経度
       };
+
+      console.log('Payload gpsLat:', payload.gpsLat, 'gpsLng:', payload.gpsLng);
+      console.log('=== END DEBUG ===');
 
       const response = await fetch(CONFIG.GAS_URL, {
         method: 'POST',
@@ -361,7 +381,7 @@ function App() {
     setData({
       date: TODAY, destination: "", weather: "", companion: "",
       routes: [{ from:"", dep:"", to:"", arr:"", line:"" }],
-      photos: [{ caption:"", image:null }, { caption:"", image:null }],
+      photos: [{ caption:"", image:null, lat:null, lng:null }, { caption:"", image:null, lat:null, lng:null }],
       senses: {}, food: "", mood: "", highlight: "", discovery: "",
     });
     setSaveStatus(null);
@@ -384,14 +404,42 @@ function App() {
     p[idx] = { ...p[idx], [field]: val };
     update("photos", p);
   };
-  const handleImage = (idx, e) => {
+  const handleImage = async (idx, e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    // EXIF GPSメタデータを読み取り
+    console.log('=== DEBUG: handleImage ===');
+    console.log('File:', file.name, file.type, file.size);
+    let lat = null;
+    let lng = null;
+    try {
+      console.log('Calling exifr.gps()...');
+      const exifData = await exifr.gps(file);
+      console.log('EXIF GPS result:', exifData);
+      if (exifData && exifData.latitude && exifData.longitude) {
+        lat = exifData.latitude;
+        lng = exifData.longitude;
+        console.log('✓ EXIF GPS found:', lat, lng);
+      } else {
+        console.log('✗ No GPS data in EXIF (result was null or missing lat/lng)');
+      }
+    } catch (err) {
+      console.error('✗ EXIF read error:', err);
+    }
+    console.log('Final lat/lng to store:', lat, lng);
+    console.log('=== END handleImage DEBUG ===');
+
+    // 画像をBase64に変換
     const reader = new FileReader();
-    reader.onload = (ev) => updatePhoto(idx, "image", ev.target.result);
+    reader.onload = (ev) => {
+      const p = [...data.photos];
+      p[idx] = { ...p[idx], image: ev.target.result, lat, lng };
+      update("photos", p);
+    };
     reader.readAsDataURL(file);
   };
-  const addPhoto = () => { if (data.photos.length < 6) update("photos", [...data.photos, { caption:"", image:null }]); };
+  const addPhoto = () => { if (data.photos.length < 6) update("photos", [...data.photos, { caption:"", image:null, lat:null, lng:null }]); };
 
   // --- Sense toggle ---
   const toggleSense = (cat, opt) => {

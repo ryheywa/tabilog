@@ -91,11 +91,18 @@ function saveEntry(data) {
     photoCaptions.push('');
   }
 
-  // 行き先から緯度経度を取得
+  // 緯度経度を取得（EXIF GPS優先、なければGeocodeにフォールバック）
   let lat = '';
   let lng = '';
-  if (data.destination) {
-    console.log('Geocoding destination:', data.destination);
+
+  // まずEXIF GPSからの緯度経度をチェック
+  if (data.gpsLat && data.gpsLng) {
+    lat = data.gpsLat;
+    lng = data.gpsLng;
+    console.log('Using EXIF GPS:', lat, lng);
+  } else if (data.destination) {
+    // EXIF GPSがない場合は行き先テキストからGeocoding
+    console.log('No EXIF GPS, falling back to Geocoding for:', data.destination);
     const coords = geocode(data.destination);
     if (coords) {
       lat = coords.lat;
