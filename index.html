@@ -414,15 +414,34 @@ function App() {
     let lat = null;
     let lng = null;
     try {
+      // まず全EXIFデータを取得してデバッグ
+      console.log('Calling exifr.parse() for full EXIF...');
+      const allExif = await exifr.parse(file);
+      console.log('Full EXIF data:', allExif);
+
+      // GPS専用の取得も試す
       console.log('Calling exifr.gps()...');
-      const exifData = await exifr.gps(file);
-      console.log('EXIF GPS result:', exifData);
-      if (exifData && exifData.latitude && exifData.longitude) {
-        lat = exifData.latitude;
-        lng = exifData.longitude;
+      const gpsData = await exifr.gps(file);
+      console.log('GPS data:', gpsData);
+
+      // GPSRefを含む生データも確認
+      if (allExif) {
+        console.log('GPSLatitude:', allExif.GPSLatitude);
+        console.log('GPSLongitude:', allExif.GPSLongitude);
+        console.log('latitude:', allExif.latitude);
+        console.log('longitude:', allExif.longitude);
+      }
+
+      if (gpsData && gpsData.latitude && gpsData.longitude) {
+        lat = gpsData.latitude;
+        lng = gpsData.longitude;
         console.log('✓ EXIF GPS found:', lat, lng);
+      } else if (allExif && allExif.latitude && allExif.longitude) {
+        lat = allExif.latitude;
+        lng = allExif.longitude;
+        console.log('✓ EXIF GPS found (from parse):', lat, lng);
       } else {
-        console.log('✗ No GPS data in EXIF (result was null or missing lat/lng)');
+        console.log('✗ No GPS data in EXIF');
       }
     } catch (err) {
       console.error('✗ EXIF read error:', err);
