@@ -197,11 +197,14 @@ function App() {
     mood: "",
     highlight: "",
     discovery: "",
+    gpsLat: null,  // 現在地GPS
+    gpsLng: null,
   });
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState(null); // 'success' | 'error' | null
   const [saved, setSaved] = useState(false);
+  const [gettingLocation, setGettingLocation] = useState(false);
   const contentRef = useRef(null);
 
   useEffect(() => {
@@ -244,6 +247,37 @@ function App() {
     });
   };
 
+  // 現在地を取得する関数
+  const getLocation = () => {
+    if (!navigator.geolocation) {
+      alert('このブラウザは位置情報に対応していません');
+      return;
+    }
+
+    setGettingLocation(true);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        console.log('GPS位置取得成功:', lat, lng);
+        setData(d => ({ ...d, gpsLat: lat, gpsLng: lng }));
+        setGettingLocation(false);
+        alert(`📍 位置情報を取得しました！\n緯度: ${lat.toFixed(6)}\n経度: ${lng.toFixed(6)}`);
+      },
+      (error) => {
+        console.error('GPS位置取得エラー:', error);
+        setGettingLocation(false);
+        let msg = '位置情報を取得できませんでした';
+        if (error.code === 1) msg = '位置情報の使用が許可されていません。\n設定で許可してください。';
+        if (error.code === 2) msg = '位置情報を取得できませんでした。';
+        if (error.code === 3) msg = '位置情報の取得がタイムアウトしました。';
+        alert('⚠️ ' + msg);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
   // 旅マップに保存する関数
   const handleSave = async () => {
     if (CONFIG.GAS_URL === 'YOUR_GAS_WEB_APP_URL_HERE') {
@@ -266,26 +300,33 @@ function App() {
         }))
       );
 
-      // 最初のGPS情報を持つ写真から緯度経度を取得
+      // GPS情報を決定（優先順位: 現在地ボタン > 写真EXIF）
       console.log('=== DEBUG: handleSave ===');
-      console.log('data.photos:', data.photos);
-      console.log('Photos with GPS:', data.photos.filter(p => p.lat && p.lng));
+      console.log('data.gpsLat:', data.gpsLat, 'data.gpsLng:', data.gpsLng);
 
-      const photoWithGps = data.photos.find(p => p.lat && p.lng);
-      const gpsLat = photoWithGps ? photoWithGps.lat : null;
-      const gpsLng = photoWithGps ? photoWithGps.lng : null;
+      let gpsLat = data.gpsLat;
+      let gpsLng = data.gpsLng;
 
-      console.log('photoWithGps:', photoWithGps);
-      console.log('gpsLat:', gpsLat, 'gpsLng:', gpsLng);
+      // 現在地ボタンで取得していない場合、写真のEXIFからも探す
+      if (!gpsLat || !gpsLng) {
+        const photoWithGps = data.photos.find(p => p.lat && p.lng);
+        if (photoWithGps) {
+          gpsLat = photoWithGps.lat;
+          gpsLng = photoWithGps.lng;
+          console.log('Using photo EXIF GPS:', gpsLat, gpsLng);
+        }
+      } else {
+        console.log('Using location button GPS:', gpsLat, gpsLng);
+      }
 
       const payload = {
         ...data,
         photos: resizedPhotos.filter(p => p.image || p.caption),
-        gpsLat,  // EXIF GPSから取得した緯度
-        gpsLng   // EXIF GPSから取得した経度
+        gpsLat,
+        gpsLng
       };
 
-      console.log('Payload gpsLat:', payload.gpsLat, 'gpsLng:', payload.gpsLng);
+      console.log('Final payload gpsLat:', payload.gpsLat, 'gpsLng:', payload.gpsLng);
       console.log('=== END DEBUG ===');
 
       const response = await fetch(CONFIG.GAS_URL, {
@@ -383,6 +424,7 @@ function App() {
       routes: [{ from:"", dep:"", to:"", arr:"", line:"" }],
       photos: [{ caption:"", image:null, lat:null, lng:null }, { caption:"", image:null, lat:null, lng:null }],
       senses: {}, food: "", mood: "", highlight: "", discovery: "",
+      gpsLat: null, gpsLng: null,
     });
     setSaveStatus(null);
     setSaved(false);
@@ -497,6 +539,42 @@ function App() {
             <div className="field">
               <label className="label">行き先</label>
               <input type="text" className={`text-input${data.destination?" filled":""}`} placeholder="例：仙台、名古屋、房総半島…" value={data.destination} onChange={e=>update("destination",e.target.value)} />
+            </div>
+            <div className="field">
+              <label className="label">現在地で記録</label>
+              <button
+                type="button"
+                onClick={getLocation}
+                disabled={gettingLocation}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  border: data.gpsLat ? '2px solid #22c55e' : '2px solid #f97316',
+                  background: data.gpsLat ? '#f0fdf4' : '#fff7ed',
+                  color: data.gpsLat ? '#16a34a' : '#ea580c',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: gettingLocation ? 'wait' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+              >
+                {gettingLocation ? (
+                  <>⏳ 取得中...</>
+                ) : data.gpsLat ? (
+                  <>✓ 位置情報を取得済み</>
+                ) : (
+                  <>📍 現在地を取得する</>
+                )}
+              </button>
+              {data.gpsLat && (
+                <div style={{fontSize: '11px', color: '#64748b', marginTop: '4px', textAlign: 'center'}}>
+                  緯度: {data.gpsLat.toFixed(4)}, 経度: {data.gpsLng.toFixed(4)}
+                </div>
+              )}
             </div>
             <div className="field">
               <label className="label">天気</label>
