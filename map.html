@@ -49,13 +49,14 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Segoe U
 .footer-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 14px; background: linear-gradient(135deg, var(--orange), var(--orange-dark)); color: #fff; text-decoration: none; border-radius: 12px; font-size: 14px; font-weight: 700; box-shadow: 0 4px 12px rgba(249,115,22,0.3); }
 
 /* InfoWindow Styles (injected via JS) */
-.info-window { max-width: 260px; font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif; }
+.info-window { max-width: 280px; font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif; }
 .info-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .info-date { font-size: 12px; color: #64748b; }
 .info-mood { font-size: 18px; }
 .info-destination { font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 8px; }
-.info-photo { width: 100%; max-height: 150px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; }
-.info-caption { font-size: 13px; color: #475569; margin-bottom: 8px; line-height: 1.5; }
+.info-photos { max-height: 300px; overflow-y: auto; margin-bottom: 8px; }
+.info-photo { width: 100%; max-height: 180px; object-fit: cover; border-radius: 8px; margin-bottom: 6px; }
+.info-caption { font-size: 13px; color: #475569; margin-bottom: 10px; line-height: 1.5; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; }
 .info-highlight { font-size: 12px; color: #64748b; padding: 8px; background: #f8fafc; border-radius: 6px; line-height: 1.5; margin-bottom: 8px; }
 .info-highlight-icon { margin-right: 4px; }
 .info-delete-btn { display: flex; align-items: center; justify-content: center; gap: 4px; width: 100%; padding: 8px; border: 1px solid #fecaca; background: #fef2f2; border-radius: 6px; color: #dc2626; font-size: 12px; font-weight: 500; cursor: pointer; margin-top: 4px; }
@@ -320,13 +321,23 @@ function createMarkerIcon(mood) {
 }
 
 function createInfoWindowContent(trip) {
-  const photoHtml = trip.photos && trip.photos[0] && trip.photos[0].url
-    ? `<img class="info-photo" src="${trip.photos[0].url}" alt="写真" onerror="this.style.display='none'">`
-    : '';
-
-  const captionHtml = trip.photos && trip.photos[0] && trip.photos[0].caption
-    ? `<div class="info-caption">${escapeHtml(trip.photos[0].caption)}</div>`
-    : '';
+  // 全ての写真を表示
+  let photosHtml = '';
+  if (trip.photos && trip.photos.length > 0) {
+    const validPhotos = trip.photos.filter(p => p.url || p.caption);
+    if (validPhotos.length > 0) {
+      photosHtml = `<div class="info-photos">`;
+      validPhotos.forEach((photo, idx) => {
+        if (photo.url) {
+          photosHtml += `<img class="info-photo" src="${photo.url}" alt="写真${idx + 1}" onerror="this.style.display='none'">`;
+        }
+        if (photo.caption) {
+          photosHtml += `<div class="info-caption">${escapeHtml(photo.caption)}</div>`;
+        }
+      });
+      photosHtml += `</div>`;
+    }
+  }
 
   const highlightHtml = trip.highlight
     ? `<div class="info-highlight"><span class="info-highlight-icon">✨</span>${escapeHtml(trip.highlight)}</div>`
@@ -346,8 +357,7 @@ function createInfoWindowContent(trip) {
         ${moodEmoji ? `<span class="info-mood">${moodEmoji}</span>` : ''}
       </div>
       <div class="info-destination">${escapeHtml(trip.destination)}</div>
-      ${photoHtml}
-      ${captionHtml}
+      ${photosHtml}
       ${highlightHtml}
       <button class="info-delete-btn" onclick="window.deleteTrip(${trip.id})">
         🗑 削除
