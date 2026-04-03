@@ -54,9 +54,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Segoe U
 .info-date { font-size: 12px; color: #64748b; }
 .info-mood { font-size: 18px; }
 .info-destination { font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 8px; }
-.info-photos { max-height: 250px; overflow-y: scroll !important; margin-bottom: 8px; -webkit-overflow-scrolling: touch; }
-.info-photo { width: 100%; max-height: 150px; object-fit: cover; border-radius: 8px; margin-bottom: 6px; display: block; }
-.info-caption { font-size: 13px; color: #475569; margin-bottom: 10px; line-height: 1.5; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; }
+.info-photos { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 8px; margin-bottom: 8px; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+.info-photos::-webkit-scrollbar { height: 4px; }
+.info-photos::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.info-photo { flex: 0 0 auto; width: 200px; height: 150px; object-fit: cover; border-radius: 8px; scroll-snap-align: start; }
+.info-caption { font-size: 13px; color: #475569; margin-bottom: 8px; line-height: 1.5; }
 .info-photo-count { font-size: 11px; color: #94a3b8; text-align: center; margin-bottom: 6px; }
 .info-highlight { font-size: 12px; color: #64748b; padding: 8px; background: #f8fafc; border-radius: 6px; line-height: 1.5; margin-bottom: 8px; }
 .info-highlight-icon { margin-right: 4px; }
@@ -329,7 +331,7 @@ function createInfoWindowContent(trip) {
     if (validPhotos.length > 0) {
       // 複数枚ある場合は枚数を表示
       if (validPhotos.filter(p => p.url).length > 1) {
-        photosHtml += `<div class="info-photo-count">📷 ${validPhotos.filter(p => p.url).length}枚の写真（↓スクロール）</div>`;
+        photosHtml += `<div class="info-photo-count">📷 ${validPhotos.filter(p => p.url).length}枚の写真（←→スワイプ）</div>`;
       }
       photosHtml += `<div class="info-photos">`;
       validPhotos.forEach((photo, idx) => {
