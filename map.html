@@ -334,7 +334,8 @@ function createInfoWindowContent(trip) {
       photosHtml += `<div class="info-photos">`;
       validPhotos.forEach((photo, idx) => {
         if (photo.url) {
-          photosHtml += `<img class="info-photo" src="${photo.url}" alt="写真${idx + 1}" onerror="this.style.display='none'">`;
+          console.log('Photo URL ' + (idx + 1) + ':', photo.url);
+          photosHtml += `<img class="info-photo" src="${photo.url}" alt="写真${idx + 1}" onerror="console.error('Image load error:', this.src); this.style.display='none';">`;
         }
         if (photo.caption) {
           photosHtml += `<div class="info-caption">${escapeHtml(photo.caption)}</div>`;
