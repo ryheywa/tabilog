@@ -478,19 +478,15 @@ function App() {
         lat = gpsData.latitude;
         lng = gpsData.longitude;
         console.log('✓ EXIF GPS found:', lat, lng);
-        alert('📍 GPS取得成功!\n緯度: ' + lat + '\n経度: ' + lng);
       } else if (allExif && allExif.latitude && allExif.longitude) {
         lat = allExif.latitude;
         lng = allExif.longitude;
         console.log('✓ EXIF GPS found (from parse):', lat, lng);
-        alert('📍 GPS取得成功!\n緯度: ' + lat + '\n経度: ' + lng);
       } else {
         console.log('✗ No GPS data in EXIF');
-        alert('⚠️ この写真にGPS情報がありません\n\nEXIF: ' + (allExif ? 'あり(GPSなし)' : 'なし'));
       }
     } catch (err) {
       console.error('✗ EXIF read error:', err);
-      alert('❌ EXIF読み取りエラー: ' + err.message);
     }
     console.log('Final lat/lng to store:', lat, lng);
     console.log('=== END handleImage DEBUG ===');
