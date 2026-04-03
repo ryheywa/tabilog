@@ -37,7 +37,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Segoe U
 .card-photo-wrapper { position: relative; width: 100%; background: var(--bg-light); cursor: pointer; }
 .card-photo { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
 .card-photo-placeholder { width: 100%; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; background: var(--bg-light); color: var(--light); font-size: 48px; }
-.card-caption { padding: 12px 16px; font-size: 14px; color: var(--blue); line-height: 1.6; }
+.card-photos-scroll { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+.card-photos-scroll::-webkit-scrollbar { display: none; }
+.card-photo-item { flex: 0 0 85%; scroll-snap-align: start; cursor: pointer; }
+.card-photo-item .card-photo { width: 100%; }
+.card-caption { padding: 12px 16px; font-size: 14px; color: var(--blue); line-height: 1.6; border-bottom: 1px solid var(--border); }
+.card-caption:last-child { border-bottom: none; }
 
 /* Highlight */
 .card-highlight { margin: 0 16px 12px; padding: 12px; background: #fffbeb; border-radius: 10px; font-size: 13px; color: #92400e; line-height: 1.5; }
@@ -246,24 +251,39 @@ function createCard(trip) {
   const moodEmoji = getMoodEmoji(trip.mood);
   const dateStr = formatDate(trip.date);
 
-  // Photo
+  // Photos (全ての写真を表示)
   let photoHtml = '';
-  if (trip.photos && trip.photos[0] && trip.photos[0].url) {
-    photoHtml = `
-      <div class="card-photo-wrapper" onclick="openModal('${escapeHtml(trip.photos[0].url)}')">
-        <img class="card-photo" data-src="${escapeHtml(trip.photos[0].url)}"
-             src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
-             alt="旅の写真" loading="lazy">
-      </div>
-    `;
+  const validPhotos = trip.photos ? trip.photos.filter(p => p.url) : [];
+  if (validPhotos.length > 0) {
+    if (validPhotos.length === 1) {
+      photoHtml = `
+        <div class="card-photo-wrapper" onclick="openModal('${escapeHtml(validPhotos[0].url)}')">
+          <img class="card-photo" data-src="${escapeHtml(validPhotos[0].url)}"
+               src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+               alt="旅の写真" loading="lazy">
+        </div>
+      `;
+    } else {
+      // 複数写真の場合は横スクロール
+      const photosInner = validPhotos.map(p => `
+        <div class="card-photo-item" onclick="openModal('${escapeHtml(p.url)}')">
+          <img class="card-photo" data-src="${escapeHtml(p.url)}"
+               src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+               alt="旅の写真" loading="lazy">
+        </div>
+      `).join('');
+      photoHtml = `<div class="card-photos-scroll">${photosInner}</div>`;
+    }
   } else {
     photoHtml = `<div class="card-photo-placeholder">🚃</div>`;
   }
 
-  // Caption
-  const captionHtml = trip.photos && trip.photos[0] && trip.photos[0].caption
-    ? `<div class="card-caption">${escapeHtml(trip.photos[0].caption)}</div>`
-    : '';
+  // Captions (全てのキャプションを表示)
+  let captionHtml = '';
+  const validCaptions = trip.photos ? trip.photos.filter(p => p.caption) : [];
+  if (validCaptions.length > 0) {
+    captionHtml = validCaptions.map(p => `<div class="card-caption">${escapeHtml(p.caption)}</div>`).join('');
+  }
 
   // Highlight
   const highlightHtml = trip.highlight
