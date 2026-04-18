@@ -1197,12 +1197,17 @@ async function save(){
       gpsLat, gpsLng,
     };
 
-    const res = await fetch(TABILOG_CONFIG.GAS_URL, { method:'POST', body: JSON.stringify(payload) });
-    const json = await res.json().catch(()=>({}));
-    if(!json.success && !(res.ok)) throw new Error(json.error || 'save failed');
+    // GAS requires no-cors mode, so we can't read the response
+    await fetch(TABILOG_CONFIG.GAS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+    // With no-cors, we assume success if no network error
 
-    // persist board assignments (we need post id; if GAS returned, use it; else fallback to timestamp)
-    const pinId = json.id || json.row || `local_${Date.now()}`;
+    // persist board assignments (use timestamp as ID since no-cors doesn't return response)
+    const pinId = `local_${Date.now()}`;
     if(state.boards.length){
       const assign = loadAssign();
       assign[pinId] = state.boards.slice();
