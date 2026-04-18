@@ -2,493 +2,1512 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>📷 旅のアルバム</title>
+<meta name="theme-color" content="#ffffff">
+<title>フィード / tabilog</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root { --orange: #f97316; --orange-dark: #ea580c; --blue: #1e293b; --gray: #64748b; --light: #94a3b8; --border: #e2e8f0; --bg-light: #f8fafc; }
-body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Segoe UI", sans-serif; background: var(--bg-light); color: var(--blue); -webkit-font-smoothing: antialiased; margin: 0; padding: 0; }
+/* ====== SHARED STYLES (inlined from _shared.css concept) ====== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-.app { max-width: 430px; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column; background: #fff; }
-
-/* Header */
-.header { padding: 16px 20px; background: linear-gradient(135deg, var(--orange), var(--orange-dark)); color: #fff; position: sticky; top: 0; z-index: 50; }
-.header-top { display: flex; align-items: center; justify-content: space-between; }
-.header-title { display: flex; align-items: center; gap: 8px; }
-.header-icon { font-size: 24px; }
-.header-text { font-size: 18px; font-weight: 700; }
-.header-links { display: flex; gap: 8px; }
-.header-link { display: flex; align-items: center; gap: 4px; padding: 8px 12px; background: rgba(255,255,255,0.2); border-radius: 99px; color: #fff; text-decoration: none; font-size: 12px; font-weight: 600; }
-.header-link:hover { background: rgba(255,255,255,0.3); }
-
-/* Timeline */
-.timeline { flex: 1; padding: 16px; }
-
-/* Card */
-.card { background: #fff; border-radius: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; border: 1px solid var(--border); }
-.card-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); }
-.card-date { font-size: 13px; color: var(--gray); font-weight: 500; }
-.card-mood { font-size: 20px; }
-.card-destination { font-size: 16px; font-weight: 700; color: var(--blue); padding: 12px 16px 8px; }
-
-/* Photo */
-.card-photo-wrapper { position: relative; width: 100%; background: var(--bg-light); cursor: pointer; }
-.card-photo { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
-.card-photo-placeholder { width: 100%; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; background: var(--bg-light); color: var(--light); font-size: 48px; }
-.card-photos-scroll { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
-.card-photos-scroll::-webkit-scrollbar { display: none; }
-.card-photo-item { flex: 0 0 85%; scroll-snap-align: start; cursor: pointer; }
-.card-photo-item .card-photo { width: 100%; }
-.card-caption { padding: 12px 16px; font-size: 14px; color: var(--blue); line-height: 1.6; border-bottom: 1px solid var(--border); }
-.card-caption:last-child { border-bottom: none; }
-
-/* Highlight */
-.card-highlight { margin: 0 16px 12px; padding: 12px; background: #fffbeb; border-radius: 10px; font-size: 13px; color: #92400e; line-height: 1.5; }
-.card-highlight-icon { margin-right: 6px; }
-
-/* Route */
-.card-route { padding: 0 16px 12px; }
-.card-route-title { font-size: 11px; color: var(--gray); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-.card-route-stations { display: flex; flex-wrap: wrap; gap: 6px; }
-.card-route-station { font-size: 12px; padding: 4px 10px; background: var(--bg-light); border-radius: 6px; color: var(--gray); }
-.card-route-arrow { color: var(--light); font-size: 10px; display: flex; align-items: center; }
-
-/* Footer actions */
-.card-footer { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-top: 1px solid var(--border); background: var(--bg-light); }
-.card-info { display: flex; gap: 12px; font-size: 12px; color: var(--gray); }
-.card-info-item { display: flex; align-items: center; gap: 4px; }
-.card-delete-btn { padding: 8px 14px; border: 1px solid #fecaca; background: #fef2f2; border-radius: 8px; color: #dc2626; font-size: 12px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 4px; }
-.card-delete-btn:hover { background: #fee2e2; }
-
-/* Empty State */
-.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; }
-.empty-emoji { font-size: 64px; margin-bottom: 16px; }
-.empty-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: var(--blue); }
-.empty-msg { font-size: 14px; color: var(--gray); margin-bottom: 24px; line-height: 1.6; }
-.empty-btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 24px; background: linear-gradient(135deg, var(--orange), var(--orange-dark)); color: #fff; text-decoration: none; border-radius: 99px; font-size: 14px; font-weight: 700; box-shadow: 0 4px 12px rgba(249,115,22,0.3); }
-
-/* Loading */
-.loading { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; }
-.loading-spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--orange); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 12px; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.loading-text { font-size: 14px; color: var(--gray); }
-
-/* Load More */
-.load-more { padding: 20px; text-align: center; }
-.load-more-btn { padding: 14px 28px; background: #fff; border: 2px solid var(--orange); color: var(--orange); border-radius: 99px; font-size: 14px; font-weight: 700; cursor: pointer; }
-.load-more-btn:hover { background: #fff7ed; }
-.load-more-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-/* Modal */
-.modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 100; display: none; align-items: center; justify-content: center; }
-.modal.active { display: flex; }
-.modal-img { max-width: 95vw; max-height: 90vh; object-fit: contain; border-radius: 8px; }
-.modal-close { position: absolute; top: 20px; right: 20px; width: 44px; height: 44px; background: rgba(255,255,255,0.2); border: none; border-radius: 50%; color: #fff; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-
-/* Toast */
-.toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: var(--blue); color: #fff; padding: 10px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; z-index: 110; box-shadow: 0 4px 20px rgba(0,0,0,0.2); animation: fadeIn 0.3s; display: none; }
-.toast.error { background: #dc2626; }
-.toast.show { display: block; }
-@keyframes fadeIn { from { opacity:0; transform: translateX(-50%) translateY(10px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
-
-/* Safe area */
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .timeline { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+:root{
+  --bg:#ffffff;
+  --bg-soft:#f7f7f7;
+  --bg-card:#f2f2f2;
+  --bg-hover:#e9e9e9;
+  --line:#ececec;
+  --line-2:#d9d9d9;
+  --ink:#111111;
+  --ink-dim:#4b4b4b;
+  --ink-mute:#767676;
+  --ink-faint:#a8a8a8;
+  --accent:#e60023;
+  --accent-hover:#b5001b;
+  --success:#16a34a;
+  --radius-sm:10px;
+  --radius-md:16px;
+  --radius-lg:24px;
+  --shadow-sm:0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg:0 24px 60px rgba(0,0,0,0.18);
 }
+
+html,body{background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body{
+  font-family:"Inter","Noto Sans JP",-apple-system,BlinkMacSystemFont,sans-serif;
+  min-height:100dvh;
+  overscroll-behavior-y:contain;
+}
+input,textarea,button,select{font-family:inherit;color:inherit;font-size:16px}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+.jp{font-family:"Noto Sans JP","Inter",sans-serif}
+
+/* ====== NAV ====== */
+.nav{
+  position:sticky;top:0;z-index:50;
+  background:rgba(255,255,255,0.9);
+  backdrop-filter:saturate(180%) blur(18px);
+  -webkit-backdrop-filter:saturate(180%) blur(18px);
+  border-bottom:1px solid var(--line);
+}
+.nav-inner{
+  max-width:720px;margin:0 auto;
+  padding:12px 16px;
+  display:flex;align-items:center;gap:12px;
+}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-mark{
+  width:36px;height:36px;border-radius:10px;
+  background:var(--accent);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:800;
+}
+.brand-name{font-size:18px;font-weight:700;letter-spacing:-0.01em}
+.nav-search{
+  flex:1;display:flex;align-items:center;gap:10px;
+  background:var(--bg-card);border-radius:999px;
+  padding:10px 16px;min-width:0;
+}
+.nav-search svg{width:18px;height:18px;color:var(--ink-mute);flex-shrink:0}
+.nav-search input{
+  flex:1;border:none;background:none;outline:none;
+  font-size:15px;min-width:0;
+}
+.nav-search input::placeholder{color:var(--ink-faint)}
+.nav-save{
+  padding:10px 18px;border-radius:999px;
+  background:var(--accent);color:#fff;border:none;
+  font-size:15px;font-weight:700;cursor:pointer;
+  transition:all .15s;
+  display:inline-flex;align-items:center;gap:6px;
+  flex-shrink:0;text-decoration:none;
+}
+.nav-save:hover{background:var(--accent-hover)}
+.nav-save svg{width:14px;height:14px}
+
+/* ====== TABBAR ====== */
+.tabbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:60;
+  background:rgba(255,255,255,0.96);
+  backdrop-filter:saturate(180%) blur(18px);
+  -webkit-backdrop-filter:saturate(180%) blur(18px);
+  border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.tabbar-inner{
+  max-width:720px;margin:0 auto;
+  display:grid;grid-template-columns:repeat(3,1fr);
+  height:64px;
+}
+.tab{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  color:var(--ink-mute);cursor:pointer;background:none;border:none;
+  transition:color .15s;text-decoration:none;
+  font-family:"Noto Sans JP","Inter",sans-serif;font-size:11px;font-weight:700;
+}
+.tab svg{width:24px;height:24px}
+.tab.on{color:var(--ink)}
+.tab.on svg{stroke-width:2.4}
+.tab:hover{color:var(--ink)}
+
+/* ====== TOAST ====== */
+.toast{
+  position:fixed;bottom:calc(80px + env(safe-area-inset-bottom));
+  left:50%;transform:translateX(-50%) translateY(8px);
+  background:#111;color:#fff;
+  padding:12px 22px;border-radius:999px;
+  font-size:14px;font-weight:600;white-space:nowrap;
+  opacity:0;pointer-events:none;z-index:100;
+  transition:all .25s cubic-bezier(.2,.8,.2,1);
+  box-shadow:0 12px 40px rgba(0,0,0,0.25);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.error{background:var(--accent)}
+
+/* ====== MODAL ====== */
+.modal{
+  position:fixed;inset:0;z-index:200;
+  display:flex;align-items:flex-end;justify-content:center;
+  background:rgba(0,0,0,0);
+  pointer-events:none;transition:background .25s;
+}
+.modal.open{background:rgba(0,0,0,0.4);pointer-events:auto}
+.modal-card{
+  width:100%;max-width:480px;
+  background:#fff;border-radius:24px 24px 0 0;
+  padding:12px 24px calc(24px + env(safe-area-inset-bottom));
+  transform:translateY(100%);
+  transition:transform .3s cubic-bezier(.2,.8,.2,1);
+}
+.modal.open .modal-card{transform:translateY(0)}
+.modal-handle{
+  width:40px;height:4px;border-radius:2px;background:#e5e5e5;
+  margin:0 auto 16px;
+}
+.modal-title{
+  font-size:20px;font-weight:800;letter-spacing:-0.02em;margin-bottom:4px;
+  font-family:"Noto Sans JP","Inter",sans-serif;
+}
+.modal-sub{
+  font-size:14px;color:var(--ink-mute);margin-bottom:20px;
+}
+.form-row{margin-bottom:18px}
+.form-label{
+  display:block;font-size:12px;font-weight:700;color:var(--ink-mute);
+  letter-spacing:0.06em;margin-bottom:6px;
+}
+.input{
+  width:100%;padding:12px 14px;border-radius:12px;
+  border:1.5px solid var(--line-2);background:#fff;outline:none;
+  font-size:15px;transition:border-color .15s;
+}
+.input:focus{border-color:var(--ink)}
+.emoji-grid{
+  display:flex;flex-wrap:wrap;gap:8px;
+}
+.emoji-grid button{
+  width:44px;height:44px;border-radius:12px;
+  background:var(--bg-card);border:2px solid transparent;
+  font-size:22px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.emoji-grid button:hover{background:var(--bg-hover)}
+.emoji-grid button.selected{border-color:var(--ink);background:#fff}
+.modal-actions{
+  display:flex;gap:10px;margin-top:8px;
+}
+.modal-actions button{
+  flex:1;padding:14px;border-radius:999px;border:none;cursor:pointer;
+  font-size:15px;font-weight:700;
+  font-family:"Noto Sans JP","Inter",sans-serif;
+}
+.modal-actions .cancel{background:var(--bg-card);color:var(--ink)}
+.modal-actions .cancel:hover{background:var(--bg-hover)}
+.modal-actions .ok{background:var(--ink);color:#fff}
+.modal-actions .ok:hover{background:#333}
+
+/* ==================== TIMELINE-SPECIFIC ==================== */
+
+/* profile header */
+.profile{
+  max-width:960px;margin:0 auto;padding:32px 20px 8px;
+}
+.profile-top{
+  display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+}
+.avatar{
+  width:96px;height:96px;border-radius:50%;
+  background:#efefef;
+  display:flex;align-items:center;justify-content:center;
+  font-size:36px;font-weight:700;color:var(--ink-mute);
+  overflow:hidden;position:relative;flex-shrink:0;cursor:pointer;
+  border:2px solid #fff;box-shadow:var(--shadow-sm);
+}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.avatar .edit-dot{
+  position:absolute;right:0;bottom:0;
+  width:28px;height:28px;border-radius:50%;
+  background:var(--ink);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  border:2px solid #fff;
+}
+.avatar .edit-dot svg{width:14px;height:14px}
+
+.profile-meta{flex:1;min-width:200px}
+.profile-name{font-size:26px;font-weight:800;letter-spacing:-0.02em;margin-bottom:2px}
+.profile-handle{font-size:15px;color:var(--ink-mute);font-weight:500;margin-bottom:10px}
+.profile-stats{display:flex;gap:18px;flex-wrap:wrap}
+.pstat{font-size:13px;color:var(--ink-dim)}
+.pstat b{color:var(--ink);font-weight:700}
+
+.profile-actions{display:flex;gap:8px;flex-wrap:wrap}
+.pf-btn{
+  padding:10px 16px;border-radius:999px;
+  background:var(--bg-card);border:none;color:var(--ink);
+  font-size:14px;font-weight:700;cursor:pointer;
+  font-family:"Noto Sans JP","Inter",sans-serif;
+  transition:background .15s;
+}
+.pf-btn:hover{background:var(--bg-hover)}
+.pf-btn.primary{background:var(--ink);color:#fff}
+.pf-btn.primary:hover{background:#333}
+
+/* tabs */
+.pf-tabs{
+  max-width:960px;margin:32px auto 0;
+  padding:0 20px;
+  display:flex;justify-content:center;gap:32px;
+  border-bottom:1px solid var(--line);
+}
+.pf-tab{
+  padding:14px 4px;background:none;border:none;
+  font-size:15px;font-weight:700;color:var(--ink-mute);
+  cursor:pointer;position:relative;
+  font-family:"Noto Sans JP","Inter",sans-serif;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.pf-tab.active{color:var(--ink)}
+.pf-tab.active::after{
+  content:"";position:absolute;left:0;right:0;bottom:-1px;
+  height:3px;background:var(--ink);border-radius:3px 3px 0 0;
+}
+.pf-tab:hover{color:var(--ink)}
+
+/* board chips */
+.chip-row{
+  max-width:960px;margin:0 auto;padding:18px 20px 6px;
+  display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;
+}
+.chip-row::-webkit-scrollbar{display:none}
+.chip{
+  padding:9px 14px;border-radius:999px;
+  background:var(--bg-card);border:none;
+  font-size:14px;font-weight:600;color:var(--ink-dim);cursor:pointer;
+  white-space:nowrap;transition:all .15s;
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:"Noto Sans JP","Inter",sans-serif;
+  min-height:38px;
+}
+.chip:hover{background:var(--bg-hover);color:var(--ink)}
+.chip.active{background:var(--ink);color:#fff}
+.chip .count{
+  font-size:12px;padding:1px 7px;border-radius:999px;
+  background:rgba(0,0,0,0.06);font-variant-numeric:tabular-nums;
+}
+.chip.active .count{background:rgba(255,255,255,0.18);color:#fff}
+
+/* masonry */
+.masonry{
+  max-width:1400px;margin:0 auto;padding:16px 16px 80px;
+  column-count:2;column-gap:10px;
+}
+@media (min-width:640px){ .masonry{column-count:3;column-gap:12px;padding:20px 20px 100px} }
+@media (min-width:900px){ .masonry{column-count:4} }
+@media (min-width:1200px){ .masonry{column-count:5} }
+@media (min-width:1500px){ .masonry{column-count:6} }
+
+.pin{
+  break-inside:avoid;margin-bottom:10px;
+  border-radius:16px;overflow:hidden;
+  position:relative;cursor:pointer;
+  background:var(--bg-card);
+  transition:transform .2s, box-shadow .2s;
+}
+@media (min-width:640px){ .masonry .pin{margin-bottom:12px;border-radius:16px} }
+.pin:hover{box-shadow:var(--shadow-md)}
+.pin-img{
+  width:100%;display:block;
+  background:var(--bg-card);
+  transition:transform .4s cubic-bezier(.2,.8,.2,1);
+}
+.pin:hover .pin-img{transform:scale(1.025)}
+.pin-tag{
+  position:absolute;top:10px;left:10px;
+  padding:5px 10px;border-radius:999px;
+  background:rgba(255,255,255,0.96);color:var(--ink);
+  font-size:11px;font-weight:700;
+  backdrop-filter:blur(4px);
+  display:inline-flex;align-items:center;gap:5px;
+  opacity:0;transition:opacity .15s;
+  box-shadow:var(--shadow-sm);
+}
+.pin:hover .pin-tag{opacity:1}
+.pin-tag .tag-dot{
+  width:5px;height:5px;border-radius:50%;background:var(--success);
+}
+.pin-save{
+  position:absolute;top:10px;right:10px;
+  padding:8px 14px;border-radius:999px;
+  background:var(--accent);color:#fff;
+  font-size:13px;font-weight:700;border:none;cursor:pointer;
+  opacity:0;transition:all .15s;
+  box-shadow:var(--shadow-md);
+}
+.pin:hover .pin-save{opacity:1}
+.pin-save:hover{background:var(--accent-hover)}
+.pin-overlay{
+  position:absolute;left:0;right:0;bottom:0;
+  padding:14px 12px 10px;
+  color:#fff;
+  background:linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.72) 100%);
+  opacity:0;transition:opacity .2s;
+  pointer-events:none;
+}
+.pin:hover .pin-overlay{opacity:1}
+.pin-caption{
+  font-size:13px;font-weight:600;line-height:1.4;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  font-family:"Noto Sans JP","Inter",sans-serif;
+}
+.pin-meta{
+  display:flex;gap:8px;font-size:11px;opacity:0.88;margin-top:4px;font-weight:500;
+}
+.pin-meta .dest{font-weight:700}
+
+/* fade-up for pins */
+.pin.fade-up{animation:fadeup .35s ease-out both}
+@keyframes fadeup{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* boards grid */
+.boards-grid{
+  max-width:1400px;margin:0 auto;padding:20px 20px 100px;
+  display:grid;grid-template-columns:repeat(auto-fill, minmax(220px,1fr));gap:16px;
+}
+.board-card{
+  cursor:pointer;
+  transition:transform .2s;
+}
+.board-card:hover{transform:translateY(-2px)}
+.board-cover{
+  width:100%;aspect-ratio:1/1;
+  border-radius:16px;overflow:hidden;
+  display:grid;grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr;gap:2px;
+  background:var(--bg-card);
+  position:relative;
+}
+.board-cover.empty{
+  display:flex;align-items:center;justify-content:center;
+  font-size:56px;
+  background:var(--bg-card);
+}
+.board-cover .bc{
+  width:100%;height:100%;
+  background-size:cover;background-position:center;
+  background-color:#ddd;position:relative;
+}
+.board-cover .bc:nth-child(1){grid-row:1/3}
+.board-cover .more{
+  position:absolute;inset:0;
+  background:rgba(0,0,0,0.5);
+  color:#fff;font-size:16px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(2px);
+}
+.board-meta{padding:10px 4px 0}
+.board-name{
+  font-size:16px;font-weight:700;
+  display:flex;align-items:center;gap:6px;
+  font-family:"Noto Sans JP","Inter",sans-serif;
+}
+.board-emoji{font-size:18px}
+.board-stats{font-size:12px;color:var(--ink-mute);margin-top:2px}
+
+.board-card.new .board-cover{
+  display:flex;align-items:center;justify-content:center;
+  border:1.5px dashed var(--line-2);background:transparent;
+}
+.board-card.new .plus{
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  color:var(--ink-mute);
+  font-family:"Noto Sans JP","Inter",sans-serif;
+  font-size:14px;font-weight:600;
+}
+.board-card.new .plus-circle{
+  width:48px;height:48px;border-radius:50%;
+  background:var(--bg-card);
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;font-weight:300;
+}
+.board-card.new:hover .board-cover{border-color:var(--ink);background:var(--bg-card)}
+.board-card.new:hover .plus,
+.board-card.new:hover .plus-circle{color:var(--ink)}
+
+/* board detail view */
+.bd{
+  max-width:1400px;margin:0 auto;padding:24px 20px 100px;
+}
+.bd-back{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 14px;border-radius:999px;background:var(--bg-card);border:none;
+  font-size:13px;font-weight:700;color:var(--ink);cursor:pointer;margin-bottom:18px;
+  font-family:"Noto Sans JP","Inter",sans-serif;
+}
+.bd-back:hover{background:var(--bg-hover)}
+.bd-back svg{width:14px;height:14px}
+.bd-header{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:16px;
+  margin-bottom:24px;flex-wrap:wrap;
+}
+.bd-title{
+  font-size:40px;font-weight:800;letter-spacing:-0.03em;
+  display:flex;align-items:center;gap:12px;
+  font-family:"Noto Sans JP","Inter",sans-serif;
+}
+.bd-title .emoji{font-size:36px}
+.bd-sub{
+  color:var(--ink-mute);font-size:14px;margin-top:6px;
+  display:flex;gap:12px;align-items:center;flex-wrap:wrap;
+}
+.bd-sub .sep{width:3px;height:3px;border-radius:50%;background:var(--ink-faint)}
+.bd-sub .count-big{color:var(--ink);font-weight:700}
+.bd-actions{display:flex;gap:8px}
+.bd-action{
+  padding:10px 16px;border-radius:999px;background:var(--bg-card);border:none;
+  font-size:13px;font-weight:700;color:var(--ink);cursor:pointer;
+  font-family:"Noto Sans JP","Inter",sans-serif;
+}
+.bd-action:hover{background:var(--bg-hover)}
+.bd-action.danger{color:var(--accent)}
+.bd-action.danger:hover{background:#fbe5e8}
+
+/* lightbox */
+.lb{
+  position:fixed;inset:0;z-index:300;
+  background:rgba(0,0,0,0.85);
+  display:none;align-items:flex-start;justify-content:center;
+  padding:40px 16px;overflow-y:auto;
+}
+.lb.active{display:flex;animation:fadein .25s}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.lb-card{
+  width:100%;max-width:960px;
+  background:#fff;border-radius:24px;overflow:hidden;
+  display:grid;grid-template-columns:1fr;
+  animation:lbup .3s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes lbup{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+@media (min-width:760px){
+  .lb-card{grid-template-columns:1fr 1fr}
+}
+.lb-img{
+  background:#000;
+  display:flex;align-items:center;justify-content:center;
+  min-height:320px;
+}
+.lb-img img{
+  width:100%;max-height:85vh;object-fit:contain;
+}
+.lb-body{padding:28px 26px}
+.lb-date{
+  font-size:13px;color:var(--ink-mute);font-weight:600;
+  display:flex;gap:10px;align-items:center;margin-bottom:8px;
+}
+.lb-date .sep{width:3px;height:3px;border-radius:50%;background:var(--ink-faint)}
+.lb-dest{
+  font-size:26px;font-weight:800;letter-spacing:-0.02em;
+  display:flex;align-items:center;gap:8px;margin-bottom:18px;
+  font-family:"Noto Sans JP","Inter",sans-serif;
+}
+.lb-dest .pin-mark{color:var(--accent)}
+.lb-dest .pin-mark svg{width:22px;height:22px}
+
+.lb-story{
+  background:var(--bg-card);border-radius:16px;
+  padding:18px;margin-bottom:18px;
+}
+.lb-story-label{
+  font-size:11px;font-weight:700;color:var(--ink-mute);
+  letter-spacing:0.08em;text-transform:uppercase;
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;
+}
+.lb-story-body{
+  font-size:16px;line-height:1.7;color:var(--ink);
+  font-family:"Noto Sans JP","Inter",sans-serif;
+  white-space:pre-wrap;word-break:break-word;
+}
+.lb-story-body.empty{color:var(--ink-mute);font-style:italic;font-size:14px}
+.lb-edit{
+  background:none;border:none;color:var(--accent);cursor:pointer;
+  font-size:13px;font-weight:700;
+  display:inline-flex;align-items:center;gap:4px;
+}
+.lb-edit svg{width:13px;height:13px}
+
+.lb-story textarea{
+  width:100%;min-height:140px;resize:vertical;
+  border:1.5px solid var(--line-2);border-radius:12px;
+  padding:12px 14px;background:#fff;outline:none;
+  font-size:15px;line-height:1.7;font-family:"Noto Sans JP","Inter",sans-serif;
+  transition:border-color .15s;
+}
+.lb-story textarea:focus{border-color:var(--ink)}
+.lb-story-editor-actions{
+  display:flex;gap:8px;margin-top:10px;justify-content:flex-end;flex-wrap:wrap;
+}
+.lb-story-editor-actions button{
+  padding:8px 14px;border-radius:999px;border:none;cursor:pointer;
+  font-size:13px;font-weight:700;
+  font-family:"Noto Sans JP","Inter",sans-serif;
+}
+.lb-cancel{background:var(--bg-hover);color:var(--ink)}
+.lb-save{background:var(--ink);color:#fff}
+.lb-save:hover{background:#333}
+.lb-mic{
+  background:#fff;border:1px solid var(--line-2);color:var(--ink);
+  display:inline-flex;align-items:center;gap:4px;margin-right:auto;
+}
+.lb-mic.rec{background:var(--accent);color:#fff;border-color:var(--accent)}
+.lb-mic svg{width:14px;height:14px}
+
+.lb-section-label{
+  font-size:11px;font-weight:700;color:var(--ink-mute);
+  letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;
+}
+.lb-boards{
+  display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px;
+}
+.lb-board-chip{
+  padding:7px 12px;border-radius:999px;
+  background:#fff;border:1.5px solid var(--line-2);color:var(--ink-dim);
+  font-size:13px;font-weight:600;cursor:pointer;
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:"Noto Sans JP","Inter",sans-serif;
+}
+.lb-board-chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.lb-board-chip:hover:not(.on){border-color:var(--ink);color:var(--ink)}
+
+.lb-actions{
+  display:flex;gap:8px;padding-top:14px;border-top:1px solid var(--line);
+}
+.lb-actions a,.lb-actions button{
+  padding:10px 16px;border-radius:999px;
+  background:var(--bg-card);border:none;color:var(--ink);
+  font-size:13px;font-weight:700;cursor:pointer;
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:"Noto Sans JP","Inter",sans-serif;
+  text-decoration:none;
+}
+.lb-actions a:hover,.lb-actions button:hover{background:var(--bg-hover)}
+.lb-actions .danger{color:var(--accent)}
+.lb-close{
+  position:fixed;top:20px;right:20px;
+  width:40px;height:40px;border-radius:50%;
+  background:rgba(255,255,255,0.92);color:var(--ink);border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;z-index:310;
+  box-shadow:var(--shadow-md);
+}
+.lb-close:hover{background:#fff}
+.lb-close svg{width:18px;height:18px}
+
+/* empty state */
+.empty{
+  max-width:480px;margin:60px auto;padding:40px 24px;
+  text-align:center;
+}
+.empty-mark{
+  width:72px;height:72px;border-radius:50%;
+  background:var(--bg-card);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 18px;color:var(--ink-mute);
+}
+.empty-mark svg{width:32px;height:32px}
+.empty-title{font-size:20px;font-weight:800;margin-bottom:6px;letter-spacing:-0.01em}
+.empty-msg{
+  color:var(--ink-mute);font-size:14px;line-height:1.6;margin-bottom:18px;
+  font-family:"Noto Sans JP","Inter",sans-serif;
+}
+.empty-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:12px 22px;border-radius:999px;background:var(--accent);color:#fff;
+  font-weight:700;font-size:14px;text-decoration:none;
+}
+.empty-btn:hover{background:var(--accent-hover)}
+
+/* view switching */
+.view{display:none}
+.view.active{display:block}
 </style>
 </head>
 <body>
-<div class="app">
-  <header class="header">
-    <div class="header-top">
-      <div class="header-title">
-        <span class="header-icon">📷</span>
-        <span class="header-text">旅のアルバム</span>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner" style="max-width:1400px">
+    <div class="brand">
+      <div class="brand-mark">t</div>
+      <div class="brand-name">tabilog</div>
+    </div>
+    <div class="nav-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" placeholder="検索…" id="search-input">
+    </div>
+    <a class="nav-save" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      <span>投稿</span>
+    </a>
+  </div>
+</nav>
+
+<!-- PROFILE -->
+<section class="profile" id="profile">
+  <div class="profile-top">
+    <div class="avatar" id="avatar">
+      <span id="avatar-initial">T</span>
+      <div class="edit-dot">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
       </div>
-      <div class="header-links">
-        <a href="map.html" class="header-link">
-          <span>🗺️</span>
-          <span>マップ</span>
-        </a>
-        <a href="index.html" class="header-link">
-          <span>＋</span>
-          <span>書く</span>
-        </a>
+      <input type="file" accept="image/*" id="avatar-input" hidden>
+    </div>
+    <div class="profile-meta">
+      <div class="profile-name" id="profile-name">Tabilogger</div>
+      <div class="profile-handle" id="profile-handle">@tabilog</div>
+      <div class="profile-stats">
+        <span class="pstat"><b id="stat-pins">0</b> ピン</span>
+        <span class="pstat"><b id="stat-boards">0</b> ボード</span>
+        <span class="pstat"><b id="stat-pref">0</b> 都道府県</span>
       </div>
     </div>
-  </header>
+    <div class="profile-actions">
+      <button class="pf-btn" id="btn-share">共有</button>
+      <button class="pf-btn primary" id="btn-edit-profile">プロフィール編集</button>
+    </div>
+  </div>
+</section>
 
-  <div class="timeline" id="timeline">
-    <div class="loading" id="loading">
-      <div class="loading-spinner"></div>
-      <div class="loading-text">読み込み中...</div>
+<div class="pf-tabs" id="pf-tabs-wrap">
+  <button class="pf-tab active" data-view="feed">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+    ピン
+  </button>
+  <button class="pf-tab" data-view="boards">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+    ボード
+  </button>
+</div>
+
+<!-- FEED VIEW -->
+<div class="view active" id="view-feed">
+  <div class="chip-row" id="feed-chips"></div>
+  <div class="masonry" id="masonry"></div>
+</div>
+
+<!-- BOARDS VIEW -->
+<div class="view" id="view-boards">
+  <div class="boards-grid" id="boards-grid"></div>
+</div>
+
+<!-- BOARD DETAIL VIEW -->
+<div class="view" id="view-board-detail">
+  <div class="bd">
+    <button class="bd-back" id="bd-back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      ボード一覧へ
+    </button>
+    <div class="bd-header">
+      <div>
+        <h1 class="bd-title" id="bd-title"></h1>
+        <div class="bd-sub" id="bd-sub"></div>
+      </div>
+      <div class="bd-actions">
+        <button class="bd-action" id="bd-rename">名前を変更</button>
+        <button class="bd-action danger" id="bd-delete">削除</button>
+      </div>
+    </div>
+    <div class="masonry" id="bd-masonry" style="padding:0;margin:0"></div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lb" id="lb">
+  <button class="lb-close" id="lb-close" aria-label="閉じる">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
+  <div class="lb-card" id="lb-card"></div>
+</div>
+
+<!-- NEW BOARD MODAL -->
+<div class="modal" id="nb-modal" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <div class="modal-handle"></div>
+    <div class="modal-title">新しいボードをつくる</div>
+    <div class="modal-sub jp">テーマを決めて、写真をまとめよう。</div>
+    <div class="form-row">
+      <label class="form-label">名前</label>
+      <input class="input jp" id="nb-name" placeholder="例：夏の海、友達との旅" maxlength="24">
+    </div>
+    <div class="form-row">
+      <label class="form-label">カバー絵文字</label>
+      <div class="emoji-grid" id="nb-emoji">
+        <button type="button" data-e="📷" class="selected">📷</button>
+        <button type="button" data-e="🚃">🚃</button>
+        <button type="button" data-e="🍙">🍙</button>
+        <button type="button" data-e="🏔️">🏔️</button>
+        <button type="button" data-e="🌊">🌊</button>
+        <button type="button" data-e="🌆">🌆</button>
+        <button type="button" data-e="👥">👥</button>
+        <button type="button" data-e="🌸">🌸</button>
+        <button type="button" data-e="🍜">🍜</button>
+        <button type="button" data-e="🎞️">🎞️</button>
+        <button type="button" data-e="✨">✨</button>
+        <button type="button" data-e="🌙">🌙</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="cancel" id="nb-cancel">キャンセル</button>
+      <button class="ok" id="nb-ok">作成</button>
     </div>
   </div>
 </div>
 
-<!-- Photo Modal -->
-<div class="modal" id="modal">
-  <button class="modal-close" onclick="closeModal()">&times;</button>
-  <img class="modal-img" id="modal-img" src="" alt="写真">
-</div>
+<!-- TAB BAR -->
+<nav class="tabbar">
+  <div class="tabbar-inner">
+    <a class="tab on" href="timeline.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      フィード
+    </a>
+    <a class="tab" href="map.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+      マップ
+    </a>
+    <a class="tab" href="index.html">
+      <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
+      投稿
+    </a>
+  </div>
+</nav>
 
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script>
-// ============================================
-// 設定
-// ============================================
-const CONFIG = {
+// ============================================================
+// CONFIG (shared across all pages)
+// ============================================================
+const TABILOG_CONFIG = {
   GAS_URL: 'https://script.google.com/macros/s/AKfycbzWXxpZToLojg0-mqUJb9SOl1YWwQ3ptWM0SeAmf_FLPqGUMgRF5vkYQikY0tPsTLL7/exec',
-  PAGE_SIZE: 10
+  MAPS_API_KEY: 'AIzaSyBsZufFWHnfHmh8Ew8PJtLarnPPG2DLs1k',
+  BOARDS_KEY: 'tabilog.boards.v1',
+  ASSIGN_KEY: 'tabilog.assign.v1',
+  DRAFT_KEY: 'tabilog.draft.v1',
+  PROFILE_KEY: 'tabilog.profile.v1',
 };
 
-// ============================================
-// State
-// ============================================
-let allTrips = [];
-let displayedCount = 0;
+// ============================================================
+// SHARED UTILITIES (inlined from _shared.js concept)
+// ============================================================
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+function escapeAttr(s){ return (s||'').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+function formatDate(d){
+  if(!d) return '';
+  const dt = new Date(d);
+  if(isNaN(dt)) return d;
+  return `${dt.getFullYear()}/${dt.getMonth()+1}/${dt.getDate()}`;
+}
+function toast(msg, isError){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.toggle('error', !!isError);
+  t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>t.classList.remove('show'), 2400);
+}
 
-// ============================================
-// Initialize
-// ============================================
-document.addEventListener('DOMContentLoaded', async () => {
-  await loadTrips();
-});
+async function loadTrips(){
+  try{
+    const res = await fetch(TABILOG_CONFIG.GAS_URL);
+    const json = await res.json();
+    if(json.success && json.data) return json.data;
+    return [];
+  }catch(e){ console.error(e); return []; }
+}
 
-// ============================================
-// Load Data
-// ============================================
-async function loadTrips() {
-  try {
-    const response = await fetch(CONFIG.GAS_URL);
-    const result = await response.json();
+// Board storage
+function loadBoards(){
+  try{ return JSON.parse(localStorage.getItem(TABILOG_CONFIG.BOARDS_KEY) || '[]'); }
+  catch(e){ return []; }
+}
+function saveBoards(boards){
+  localStorage.setItem(TABILOG_CONFIG.BOARDS_KEY, JSON.stringify(boards));
+}
 
-    if (result.success && result.data) {
-      // 新しい順にソート
-      allTrips = result.data.sort((a, b) => {
-        const dateA = new Date(a.date || a.timestamp);
-        const dateB = new Date(b.date || b.timestamp);
-        return dateB - dateA;
+// Assign storage (pin → boards mapping)
+function loadAssign(){
+  try{ return JSON.parse(localStorage.getItem(TABILOG_CONFIG.ASSIGN_KEY) || '{}'); }
+  catch(e){ return {}; }
+}
+function saveAssign(map){
+  localStorage.setItem(TABILOG_CONFIG.ASSIGN_KEY, JSON.stringify(map));
+}
+
+// ============================================================
+// PREFECTURE DETECTION
+// ============================================================
+const PREF_BOUNDS = {
+  '北海道': { minLat: 41.3, maxLat: 45.6, minLng: 139.3, maxLng: 145.8 },
+  '青森': { minLat: 40.2, maxLat: 41.6, minLng: 139.5, maxLng: 141.7 },
+  '岩手': { minLat: 38.7, maxLat: 40.5, minLng: 140.6, maxLng: 142.1 },
+  '宮城': { minLat: 37.8, maxLat: 39.0, minLng: 140.2, maxLng: 141.7 },
+  '秋田': { minLat: 39.0, maxLat: 40.5, minLng: 139.7, maxLng: 140.7 },
+  '山形': { minLat: 37.7, maxLat: 39.2, minLng: 139.5, maxLng: 140.7 },
+  '福島': { minLat: 36.8, maxLat: 38.0, minLng: 139.2, maxLng: 141.1 },
+  '茨城': { minLat: 35.7, maxLat: 36.9, minLng: 139.7, maxLng: 140.9 },
+  '栃木': { minLat: 36.2, maxLat: 37.2, minLng: 139.3, maxLng: 140.3 },
+  '群馬': { minLat: 36.0, maxLat: 37.1, minLng: 138.4, maxLng: 139.7 },
+  '埼玉': { minLat: 35.7, maxLat: 36.3, minLng: 138.7, maxLng: 139.9 },
+  '千葉': { minLat: 34.9, maxLat: 36.1, minLng: 139.7, maxLng: 140.9 },
+  '東京': { minLat: 35.5, maxLat: 35.9, minLng: 138.9, maxLng: 139.9 },
+  '神奈川': { minLat: 35.1, maxLat: 35.7, minLng: 138.9, maxLng: 139.8 },
+  '新潟': { minLat: 36.7, maxLat: 38.6, minLng: 137.8, maxLng: 140.0 },
+  '富山': { minLat: 36.3, maxLat: 36.9, minLng: 136.8, maxLng: 137.8 },
+  '石川': { minLat: 36.1, maxLat: 37.9, minLng: 136.2, maxLng: 137.4 },
+  '福井': { minLat: 35.4, maxLat: 36.3, minLng: 135.5, maxLng: 136.8 },
+  '山梨': { minLat: 35.2, maxLat: 35.9, minLng: 138.2, maxLng: 139.2 },
+  '長野': { minLat: 35.2, maxLat: 37.0, minLng: 137.3, maxLng: 138.8 },
+  '岐阜': { minLat: 35.1, maxLat: 36.5, minLng: 136.3, maxLng: 137.7 },
+  '静岡': { minLat: 34.6, maxLat: 35.6, minLng: 137.5, maxLng: 139.2 },
+  '愛知': { minLat: 34.6, maxLat: 35.4, minLng: 136.7, maxLng: 137.8 },
+  '三重': { minLat: 33.7, maxLat: 35.2, minLng: 135.9, maxLng: 137.0 },
+  '滋賀': { minLat: 34.8, maxLat: 35.7, minLng: 135.8, maxLng: 136.5 },
+  '京都': { minLat: 34.8, maxLat: 35.8, minLng: 135.0, maxLng: 136.1 },
+  '大阪': { minLat: 34.3, maxLat: 35.1, minLng: 135.1, maxLng: 135.8 },
+  '兵庫': { minLat: 34.2, maxLat: 35.7, minLng: 134.3, maxLng: 135.5 },
+  '奈良': { minLat: 33.9, maxLat: 34.8, minLng: 135.6, maxLng: 136.2 },
+  '和歌山': { minLat: 33.4, maxLat: 34.4, minLng: 135.0, maxLng: 136.0 },
+  '鳥取': { minLat: 35.1, maxLat: 35.6, minLng: 133.2, maxLng: 134.5 },
+  '島根': { minLat: 34.3, maxLat: 37.3, minLng: 131.7, maxLng: 133.4 },
+  '岡山': { minLat: 34.4, maxLat: 35.3, minLng: 133.4, maxLng: 134.5 },
+  '広島': { minLat: 34.0, maxLat: 35.0, minLng: 132.0, maxLng: 133.5 },
+  '山口': { minLat: 33.7, maxLat: 34.8, minLng: 130.8, maxLng: 132.2 },
+  '徳島': { minLat: 33.5, maxLat: 34.3, minLng: 133.5, maxLng: 134.8 },
+  '香川': { minLat: 34.1, maxLat: 34.5, minLng: 133.6, maxLng: 134.5 },
+  '愛媛': { minLat: 32.9, maxLat: 34.2, minLng: 132.0, maxLng: 133.7 },
+  '高知': { minLat: 32.7, maxLat: 33.9, minLng: 132.5, maxLng: 134.3 },
+  '福岡': { minLat: 33.0, maxLat: 33.9, minLng: 130.0, maxLng: 131.2 },
+  '佐賀': { minLat: 33.0, maxLat: 33.6, minLng: 129.7, maxLng: 130.5 },
+  '長崎': { minLat: 32.5, maxLat: 34.7, minLng: 128.6, maxLng: 130.4 },
+  '熊本': { minLat: 32.0, maxLat: 33.2, minLng: 130.1, maxLng: 131.3 },
+  '大分': { minLat: 32.7, maxLat: 33.8, minLng: 130.8, maxLng: 132.1 },
+  '宮崎': { minLat: 31.4, maxLat: 32.9, minLng: 130.7, maxLng: 131.9 },
+  '鹿児島': { minLat: 27.0, maxLat: 32.4, minLng: 128.4, maxLng: 131.2 },
+  '沖縄': { minLat: 24.0, maxLat: 27.9, minLng: 122.9, maxLng: 131.3 },
+};
+
+function getPrefecture(lat, lng) {
+  for (const [pref, bounds] of Object.entries(PREF_BOUNDS)) {
+    if (lat >= bounds.minLat && lat <= bounds.maxLat &&
+        lng >= bounds.minLng && lng <= bounds.maxLng) {
+      return pref;
+    }
+  }
+  return null;
+}
+
+// ============================================================
+// TRIP → PIN CONVERSION
+// ============================================================
+function tripsToPins(trips){
+  const pins = [];
+  trips.forEach(trip=>{
+    const photos = (trip.photos || []).filter(p => p && (p.url || p.image));
+    if(photos.length === 0) return;
+    photos.forEach((photo, idx)=>{
+      pins.push({
+        id: `${trip.id}_${idx}`,
+        tripId: trip.id,
+        url: photo.url || photo.image,
+        caption: photo.caption || '',
+        destination: trip.destination,
+        date: trip.date,
+        highlight: trip.highlight || '',
+        mood: trip.mood,
+        weather: trip.weather,
+        routes: trip.routes,
+        lat: trip.lat,
+        lng: trip.lng,
+      });
+    });
+  });
+  return pins.sort((a,b)=> new Date(b.date||0) - new Date(a.date||0));
+}
+
+function getPinBoards(pin, assignMap){
+  return assignMap[pin.id] || [];
+}
+
+// Story override storage (local edits before sync)
+function saveStoryOverride(tripId, text){
+  const key = 'tabilog.story.override';
+  const map = JSON.parse(localStorage.getItem(key) || '{}');
+  map[tripId] = text;
+  localStorage.setItem(key, JSON.stringify(map));
+}
+
+// ============================================================
+// TIMELINE APPLICATION
+// ============================================================
+(function(){
+  let trips = [];
+  let boards = loadBoards();
+  let assignMap = loadAssign();
+  let ALL_PINS = [];
+  let activeBoardFilter = '__all';
+  let currentView = 'feed';
+  let searchQuery = '';
+
+  // ============== RENDER: FEED ==============
+  function renderFeedChips(){
+    const wrap = document.getElementById('feed-chips');
+    const all = ALL_PINS.length;
+    wrap.innerHTML = `<button class="chip ${activeBoardFilter==='__all'?'active':''}" data-board="__all">すべて <span class="count">${all}</span></button>` +
+      boards.map(b=>{
+        const n = ALL_PINS.filter(p=>getPinBoards(p, assignMap).includes(b.id)).length;
+        return `<button class="chip ${activeBoardFilter===b.id?'active':''}" data-board="${b.id}">${b.emoji} ${escapeHtml(b.name)} <span class="count">${n}</span></button>`;
+      }).join('');
+    wrap.querySelectorAll('.chip').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        activeBoardFilter = el.dataset.board;
+        renderFeedChips();
+        renderMasonry();
+      });
+    });
+    document.getElementById('stat-pins').textContent = all;
+    document.getElementById('stat-boards').textContent = boards.length;
+    const prefs = new Set();
+    trips.forEach(t=>{ const p = getPrefecture(t.lat, t.lng); if(p) prefs.add(p); });
+    document.getElementById('stat-pref').textContent = prefs.size;
+  }
+
+  function filterPins(){
+    let pins = activeBoardFilter === '__all'
+      ? ALL_PINS
+      : ALL_PINS.filter(p => getPinBoards(p, assignMap).includes(activeBoardFilter));
+    if(searchQuery){
+      const q = searchQuery.toLowerCase();
+      pins = pins.filter(p=>{
+        return ((p.destination||'') + ' ' + (p.caption||'') + ' ' + (p.highlight||'')).toLowerCase().includes(q);
       });
     }
-
-    renderTimeline();
-
-  } catch (error) {
-    console.error('Failed to load trips:', error);
-    showError();
-  }
-}
-
-// ============================================
-// Render
-// ============================================
-function renderTimeline() {
-  const container = document.getElementById('timeline');
-  const loading = document.getElementById('loading');
-
-  if (loading) loading.style.display = 'none';
-
-  if (allTrips.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-emoji">📷</div>
-        <div class="empty-title">まだ旅の記録がないよ</div>
-        <div class="empty-msg">旅ログを書くと、ここに写真と一緒に<br>旅の思い出が並んでいくよ！</div>
-        <a href="index.html" class="empty-btn">
-          <span>📝</span>
-          <span>最初の旅ログを書く</span>
-        </a>
-      </div>
-    `;
-    return;
+    return pins;
   }
 
-  // 表示するデータ
-  const toShow = allTrips.slice(0, displayedCount + CONFIG.PAGE_SIZE);
-  displayedCount = toShow.length;
+  function renderMasonry(){
+    const wrap = document.getElementById('masonry');
+    const pins = filterPins();
 
-  let html = '';
-
-  toShow.forEach(trip => {
-    html += createCard(trip);
-  });
-
-  // Load Moreボタン
-  if (displayedCount < allTrips.length) {
-    html += `
-      <div class="load-more">
-        <button class="load-more-btn" onclick="loadMore()">
-          もっと見る（あと${allTrips.length - displayedCount}件）
-        </button>
-      </div>
-    `;
-  }
-
-  container.innerHTML = html;
-
-  // Lazy loading for images
-  const images = container.querySelectorAll('img[data-src]');
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const img = entry.target;
-        img.src = img.dataset.src;
-        img.removeAttribute('data-src');
-        observer.unobserve(img);
-      }
-    });
-  }, { rootMargin: '200px' });
-
-  images.forEach(img => observer.observe(img));
-}
-
-function createCard(trip) {
-  const moodEmoji = getMoodEmoji(trip.mood);
-  const dateStr = formatDate(trip.date);
-
-  // Photos (全ての写真を表示)
-  let photoHtml = '';
-  const validPhotos = trip.photos ? trip.photos.filter(p => p.url) : [];
-  if (validPhotos.length > 0) {
-    if (validPhotos.length === 1) {
-      photoHtml = `
-        <div class="card-photo-wrapper" onclick="openModal('${escapeHtml(validPhotos[0].url)}')">
-          <img class="card-photo" data-src="${escapeHtml(validPhotos[0].url)}"
-               src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
-               alt="旅の写真" loading="lazy">
-        </div>
-      `;
-    } else {
-      // 複数写真の場合は横スクロール
-      const photosInner = validPhotos.map(p => `
-        <div class="card-photo-item" onclick="openModal('${escapeHtml(p.url)}')">
-          <img class="card-photo" data-src="${escapeHtml(p.url)}"
-               src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
-               alt="旅の写真" loading="lazy">
-        </div>
-      `).join('');
-      photoHtml = `<div class="card-photos-scroll">${photosInner}</div>`;
+    if(pins.length === 0){
+      wrap.innerHTML = `
+        <div class="empty" style="column-span:all">
+          <div class="empty-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 15l-5-5L5 19"/></svg></div>
+          <div class="empty-title">まだピンがない</div>
+          <div class="empty-msg">写真を1枚投稿すると、ここに並んでいくよ。</div>
+          <a class="empty-btn" href="index.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" style="width:14px;height:14px"><path d="M12 5v14M5 12h14"/></svg>
+            投稿する
+          </a>
+        </div>`;
+      return;
     }
-  } else {
-    photoHtml = `<div class="card-photo-placeholder">🚃</div>`;
-  }
 
-  // Captions (全てのキャプションを表示)
-  let captionHtml = '';
-  const validCaptions = trip.photos ? trip.photos.filter(p => p.caption) : [];
-  if (validCaptions.length > 0) {
-    captionHtml = validCaptions.map(p => `<div class="card-caption">${escapeHtml(p.caption)}</div>`).join('');
-  }
-
-  // Highlight
-  const highlightHtml = trip.highlight
-    ? `<div class="card-highlight"><span class="card-highlight-icon">✨</span>${escapeHtml(trip.highlight)}</div>`
-    : '';
-
-  // Routes
-  let routeHtml = '';
-  if (trip.routes && trip.routes.length > 0) {
-    const stationsHtml = trip.routes.map((station, idx) => {
-      if (idx === trip.routes.length - 1) {
-        return `<span class="card-route-station">${escapeHtml(station)}</span>`;
-      }
-      return `<span class="card-route-station">${escapeHtml(station)}</span><span class="card-route-arrow">→</span>`;
+    wrap.innerHTML = pins.map((p,i)=>{
+      const assigned = getPinBoards(p, assignMap);
+      const firstBoard = assigned[0] ? boards.find(b=>b.id===assigned[0]) : null;
+      const delay = Math.min(i*20, 300);
+      return `
+        <div class="pin fade-up" style="animation-delay:${delay}ms" data-pid="${p.id}">
+          <img class="pin-img" src="${escapeAttr(p.url)}" alt="" loading="lazy">
+          ${firstBoard ? `<div class="pin-tag"><span class="tag-dot"></span>${firstBoard.emoji} ${escapeHtml(firstBoard.name)}</div>` : ''}
+          <button class="pin-save" data-pid="${p.id}">保存</button>
+          <div class="pin-overlay">
+            <div class="pin-caption">${escapeHtml(p.highlight || p.caption || p.destination || '')}</div>
+            <div class="pin-meta">
+              <span class="dest">${escapeHtml(p.destination||'')}</span>
+              <span>${formatDate(p.date)}</span>
+            </div>
+          </div>
+        </div>`;
     }).join('');
 
-    routeHtml = `
-      <div class="card-route">
-        <div class="card-route-title">ルート</div>
-        <div class="card-route-stations">${stationsHtml}</div>
-      </div>
-    `;
-  }
-
-  // Info items
-  const weatherIcon = getWeatherIcon(trip.weather);
-  const companionIcon = getCompanionIcon(trip.companion);
-
-  return `
-    <div class="card" data-id="${trip.id}">
-      <div class="card-header">
-        <span class="card-date">${dateStr}</span>
-        ${moodEmoji ? `<span class="card-mood">${moodEmoji}</span>` : ''}
-      </div>
-      <div class="card-destination">${escapeHtml(trip.destination)}</div>
-      ${photoHtml}
-      ${captionHtml}
-      ${highlightHtml}
-      ${routeHtml}
-      <div class="card-footer">
-        <div class="card-info">
-          ${weatherIcon ? `<span class="card-info-item">${weatherIcon}</span>` : ''}
-          ${companionIcon ? `<span class="card-info-item">${companionIcon}</span>` : ''}
-        </div>
-        <button class="card-delete-btn" onclick="deleteTrip(${trip.id})">
-          <span>🗑</span>
-          <span>削除</span>
-        </button>
-      </div>
-    </div>
-  `;
-}
-
-function loadMore() {
-  renderTimeline();
-}
-
-// ============================================
-// Delete
-// ============================================
-async function deleteTrip(id) {
-  if (!confirm('この旅ログを削除しますか？\n（写真も一緒に削除されます）')) {
-    return;
-  }
-
-  try {
-    await fetch(CONFIG.GAS_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'delete', id: id })
+    wrap.querySelectorAll('.pin').forEach(el=>{
+      el.addEventListener('click', (e)=>{
+        if(e.target.closest('.pin-save')) return;
+        openLb(el.dataset.pid);
+      });
     });
+    wrap.querySelectorAll('.pin-save').forEach(el=>{
+      el.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        openLb(el.dataset.pid);
+      });
+    });
+  }
 
-    // UIから削除
-    allTrips = allTrips.filter(t => t.id !== id);
-    displayedCount = Math.max(0, displayedCount - 1);
+  // ============== RENDER: BOARDS ==============
+  function renderBoards(){
+    const wrap = document.getElementById('boards-grid');
+    const html = boards.map(b=>{
+      const pins = ALL_PINS.filter(p=>getPinBoards(p, assignMap).includes(b.id));
+      const covers = pins.slice(0,3);
+      const more = Math.max(0, pins.length - 3);
+      let coverHtml;
+      if(covers.length === 0){
+        coverHtml = `<div class="board-cover empty">${b.emoji}</div>`;
+      } else {
+        const cells = [0,1,2].map(i=>{
+          const p = covers[i];
+          if(!p) return `<div class="bc"></div>`;
+          const moreHtml = (i===2 && more>0) ? `<div class="more">+${more}</div>` : '';
+          return `<div class="bc" style="background-image:url('${escapeAttr(p.url)}')">${moreHtml}</div>`;
+        }).join('');
+        coverHtml = `<div class="board-cover">${cells}</div>`;
+      }
+      return `
+        <div class="board-card" data-bid="${b.id}">
+          ${coverHtml}
+          <div class="board-meta">
+            <div class="board-name"><span class="board-emoji">${b.emoji}</span>${escapeHtml(b.name)}</div>
+            <div class="board-stats">${pins.length} 件</div>
+          </div>
+        </div>`;
+    }).join('') + `
+      <div class="board-card new" id="new-board-btn">
+        <div class="board-cover">
+          <div class="plus">
+            <div class="plus-circle">+</div>
+            <div>新しいボード</div>
+          </div>
+        </div>
+      </div>`;
+    wrap.innerHTML = html;
+    wrap.querySelectorAll('.board-card[data-bid]').forEach(el=>{
+      el.addEventListener('click', ()=> openBoardDetail(el.dataset.bid));
+    });
+    document.getElementById('new-board-btn').addEventListener('click', openNewBoard);
+  }
 
-    // カードをアニメーションで消す
-    const card = document.querySelector(`.card[data-id="${id}"]`);
-    if (card) {
-      card.style.transition = 'all 0.3s ease';
-      card.style.opacity = '0';
-      card.style.transform = 'scale(0.9)';
-      setTimeout(() => {
-        renderTimeline();
-      }, 300);
+  function openBoardDetail(bid){
+    const b = boards.find(x=>x.id===bid);
+    if(!b) return;
+    const pins = ALL_PINS.filter(p=>getPinBoards(p, assignMap).includes(bid));
+    const storied = pins.filter(p => (p.highlight && p.highlight.trim()) || (p.caption && p.caption.trim())).length;
+
+    document.getElementById('bd-title').innerHTML = `<span class="emoji">${b.emoji}</span>${escapeHtml(b.name)}`;
+    document.getElementById('bd-sub').innerHTML = `
+      <span><span class="count-big">${pins.length}</span> ピン</span>
+      <span class="sep"></span>
+      <span><span class="count-big">${storied}</span> に言葉あり</span>
+    `;
+    const mas = document.getElementById('bd-masonry');
+    if(pins.length === 0){
+      mas.innerHTML = `<div class="empty" style="column-span:all">
+        <div class="empty-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></div>
+        <div class="empty-title">このボードはまだ空</div>
+        <div class="empty-msg">フィードの写真を「保存」でここに追加しよう。</div>
+      </div>`;
     } else {
-      renderTimeline();
+      mas.innerHTML = pins.map((p,i)=>{
+        const delay = Math.min(i*20, 300);
+        const hasWords = (p.highlight && p.highlight.trim()) || (p.caption && p.caption.trim());
+        const snippet = hasWords ? (p.highlight || p.caption).slice(0, 60) : '';
+        return `<div class="pin fade-up" style="animation-delay:${delay}ms" data-pid="${p.id}">
+          <img class="pin-img" src="${escapeAttr(p.url)}" alt="" loading="lazy">
+          <div class="pin-tag" style="opacity:1">
+            <span class="tag-dot" style="background:${hasWords ? 'var(--success)' : 'var(--ink-faint)'}"></span>
+            ${hasWords ? '言葉あり' : 'まだ無言'}
+          </div>
+          <div class="pin-overlay" style="opacity:1;background:linear-gradient(180deg, transparent 30%, rgba(0,0,0,0.78) 100%)">
+            ${snippet ? `<div class="pin-caption">${escapeHtml(snippet)}${(p.highlight||p.caption).length>60?'…':''}</div>` : ``}
+            <div class="pin-meta"><span class="dest">${escapeHtml(p.destination||'')}</span><span>${formatDate(p.date)}</span></div>
+          </div>
+        </div>`;
+      }).join('');
+      mas.querySelectorAll('.pin').forEach(el=> el.addEventListener('click', ()=> openLb(el.dataset.pid)));
     }
 
-    showToast('削除しました');
+    document.getElementById('bd-rename').onclick = ()=>{
+      const n = prompt('ボード名を変更', b.name);
+      if(n && n.trim()){ b.name = n.trim(); saveBoards(boards); renderBoards(); renderFeedChips(); openBoardDetail(bid); toast('名前を変更しました'); }
+    };
+    document.getElementById('bd-delete').onclick = ()=>{
+      if(!confirm(`「${b.name}」を削除する？\n（写真は消えず、紐付けだけ外れます）`)) return;
+      boards = boards.filter(x=>x.id!==bid);
+      Object.keys(assignMap).forEach(pid=>{
+        assignMap[pid] = assignMap[pid].filter(x=>x!==bid);
+        if(assignMap[pid].length===0) delete assignMap[pid];
+      });
+      saveBoards(boards); saveAssign(assignMap);
+      showView('boards'); renderBoards(); renderFeedChips();
+      toast('ボードを削除しました');
+    };
 
-  } catch (error) {
-    console.error('Delete error:', error);
-    showToast('削除に失敗しました', true);
+    showView('board-detail');
   }
-}
 
-// ============================================
-// Modal
-// ============================================
-function openModal(url) {
-  const modal = document.getElementById('modal');
-  const img = document.getElementById('modal-img');
-  img.src = url;
-  modal.classList.add('active');
-  document.body.style.overflow = 'hidden';
-}
+  document.getElementById('bd-back').addEventListener('click', ()=> showView('boards'));
 
-function closeModal() {
-  const modal = document.getElementById('modal');
-  modal.classList.remove('active');
-  document.body.style.overflow = '';
-}
+  // ============== LIGHTBOX ==============
+  function openLb(pid){
+    const p = ALL_PINS.find(x=>x.id===pid);
+    if(!p) return;
+    const assigned = new Set(getPinBoards(p, assignMap));
+    const hasStory = !!((p.highlight && p.highlight.trim()) || (p.caption && p.caption.trim()));
+    const storyText = (p.highlight && p.highlight.trim()) ? p.highlight : (p.caption || '');
+    const card = document.getElementById('lb-card');
 
-// Close on background click
-document.getElementById('modal').addEventListener('click', (e) => {
-  if (e.target.id === 'modal') {
-    closeModal();
+    const routesArr = Array.isArray(p.routes) ? p.routes : (p.routes ? [p.routes] : []);
+    const routeText = routesArr.map(r=>{
+      if(typeof r === 'string') return r;
+      if(r && typeof r === 'object'){
+        const from = r.from || r.station_from || r.start || '';
+        const to = r.to || r.station_to || r.end || '';
+        if(from && to) return `${from} → ${to}`;
+        return from || to || (r.line || '');
+      }
+      return '';
+    }).filter(Boolean).join(' / ');
+
+    card.innerHTML = `
+      <div class="lb-img"><img src="${escapeAttr(p.url)}" alt=""></div>
+      <div class="lb-body">
+        <div class="lb-date">
+          <span>${formatDate(p.date) || '—'}</span>
+          ${p.weather?`<span class="sep"></span><span>${escapeHtml(p.weather)}</span>`:''}
+          ${p.mood?`<span class="sep"></span><span>${escapeHtml(p.mood)}</span>`:''}
+        </div>
+        <div class="lb-dest">
+          <span class="pin-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1118 0z"/><circle cx="12" cy="10" r="2.5" fill="currentColor"/></svg></span>
+          ${escapeHtml(p.destination||'どこか')}
+        </div>
+
+        <div class="lb-story" id="story-block">
+          <div class="lb-story-label">
+            <span>${hasStory ? 'ストーリー' : 'まだ言葉になってない旅'}</span>
+            <button class="lb-edit" id="story-edit">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              ${hasStory ? '編集' : '書く'}
+            </button>
+          </div>
+          <div id="story-view">
+            ${hasStory
+              ? `<div class="lb-story-body">${escapeHtml(storyText)}</div>`
+              : `<div class="lb-story-body empty">ここでしか撮れなかった一枚。あとで見返したときに、何を感じた旅だったか思い出せるように、少しだけ書き残しておこう。</div>`}
+          </div>
+          <div id="story-edit-panel" style="display:none">
+            <textarea id="story-input" placeholder="ここで何があった？ なぜここを選んだ？"></textarea>
+            <div class="lb-story-editor-actions">
+              <button class="lb-mic" id="story-mic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11v1a7 7 0 0014 0v-1M12 19v3"/></svg>
+                <span id="mic-label">音声</span>
+              </button>
+              <button class="lb-cancel" id="story-cancel">キャンセル</button>
+              <button class="lb-save" id="story-save">保存</button>
+            </div>
+          </div>
+        </div>
+
+        ${routeText ? `<div class="lb-section-label">ルート</div><div style="font-size:14px;color:var(--ink-dim);margin-bottom:18px;font-family:'Noto Sans JP','Inter',sans-serif">${escapeHtml(routeText)}</div>` : ''}
+
+        <div class="lb-section-label">ボードに追加</div>
+        <div class="lb-boards">
+          ${boards.map(b=>{
+            const on = assigned.has(b.id);
+            return `<button class="lb-board-chip ${on?'on':''}" data-bid="${b.id}">${b.emoji} ${escapeHtml(b.name)}</button>`;
+          }).join('')}
+          <button class="lb-board-chip" id="lb-new-board" style="border-style:dashed">＋ 新規</button>
+        </div>
+
+        <div class="lb-actions">
+          <a href="map.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1118 0z"/><circle cx="12" cy="10" r="3"/></svg>地図で見る</a>
+          <button class="danger" id="lb-delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>削除</button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('lb').classList.add('active');
+    document.body.style.overflow = 'hidden';
+
+    // board chip toggles
+    card.querySelectorAll('.lb-board-chip[data-bid]').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        const bid = el.dataset.bid;
+        const on = !assigned.has(bid);
+        const current = new Set(assignMap[p.id] || getPinBoards(p, assignMap));
+        if(on){ assigned.add(bid); current.add(bid); }
+        else { assigned.delete(bid); current.delete(bid); }
+        if(current.size === 0) delete assignMap[p.id];
+        else assignMap[p.id] = Array.from(current);
+        saveAssign(assignMap);
+        el.classList.toggle('on', on);
+        renderFeedChips();
+        const b = boards.find(x=>x.id===bid);
+        toast(on ? `「${b.name}」に保存` : 'ボードから外した');
+      });
+    });
+    document.getElementById('lb-new-board').onclick = ()=>{ closeLb(); openNewBoard(); };
+    document.getElementById('lb-delete').onclick = ()=> deleteTrip(p.tripId);
+
+    // story editor
+    const storyView = document.getElementById('story-view');
+    const editPanel = document.getElementById('story-edit-panel');
+    const editBtn = document.getElementById('story-edit');
+    const input = document.getElementById('story-input');
+    const micBtn = document.getElementById('story-mic');
+    const micLabel = document.getElementById('mic-label');
+    const saveBtn = document.getElementById('story-save');
+    const cancelBtn = document.getElementById('story-cancel');
+    let recognizer = null, recording = false;
+
+    editBtn.addEventListener('click', ()=>{
+      input.value = storyText;
+      storyView.style.display = 'none';
+      editPanel.style.display = 'block';
+      setTimeout(()=>input.focus(), 50);
+    });
+    cancelBtn.addEventListener('click', ()=>{
+      editPanel.style.display = 'none';
+      storyView.style.display = 'block';
+      stopRec();
+    });
+    saveBtn.addEventListener('click', async ()=>{
+      const text = input.value.trim();
+      saveBtn.disabled = true; saveBtn.textContent = '保存中…';
+      p.highlight = text;
+      const trip = trips.find(t=>t.id===p.tripId);
+      if(trip) trip.highlight = text;
+      saveStoryOverride(p.tripId, text);
+      try{
+        await fetch(TABILOG_CONFIG.GAS_URL, {
+          method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'},
+          body: JSON.stringify({ action:'update', id: p.tripId, highlight: text })
+        });
+      }catch(e){ console.warn('save story failed', e); }
+      saveBtn.disabled = false; saveBtn.textContent = '保存';
+      toast(text ? '言葉を保存しました' : '空で保存しました');
+      openLb(pid);
+    });
+    function stopRec(){
+      if(recognizer){ try{ recognizer.stop(); }catch(e){} }
+      recording = false; micBtn.classList.remove('rec'); micLabel.textContent = '音声';
+    }
+    micBtn.addEventListener('click', ()=>{
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if(!SR){ toast('この端末は音声入力に非対応', true); return; }
+      if(recording){ stopRec(); return; }
+      recognizer = new SR();
+      recognizer.lang = 'ja-JP'; recognizer.continuous = true; recognizer.interimResults = false;
+      recognizer.onresult = (ev)=>{
+        let s = '';
+        for(let i=ev.resultIndex;i<ev.results.length;i++) if(ev.results[i].isFinal) s += ev.results[i][0].transcript;
+        if(s){ input.value = input.value ? (input.value.replace(/\s+$/,'') + ' ' + s) : s; }
+      };
+      recognizer.onerror = stopRec;
+      recognizer.onend = ()=>{ if(recording){ try{ recognizer.start(); }catch(e){ stopRec(); } } };
+      try{ recognizer.start(); recording = true; micBtn.classList.add('rec'); micLabel.textContent = '停止'; }
+      catch(e){ toast('音声入力を開始できません', true); }
+    });
   }
-});
 
-// Close on Escape key
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    closeModal();
+  function closeLb(){
+    document.getElementById('lb').classList.remove('active');
+    document.body.style.overflow = '';
   }
-});
+  document.getElementById('lb').addEventListener('click', (e)=>{
+    if(e.target.id === 'lb') closeLb();
+  });
+  document.getElementById('lb-close').addEventListener('click', closeLb);
+  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ closeLb(); closeNewBoard(); } });
 
-// ============================================
-// Helpers
-// ============================================
-function getMoodEmoji(mood) {
-  const map = {
-    '最高！': '😆',
-    '楽しかった': '😊',
-    'まあまあ': '😌',
-    'ふつう': '😐',
-    'つかれた…': '😫'
-  };
-  return map[mood] || '';
-}
+  // ============== DELETE ==============
+  async function deleteTrip(tripId){
+    if(!confirm('この投稿を削除しますか？')) return;
+    try{
+      await fetch(TABILOG_CONFIG.GAS_URL, {
+        method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'},
+        body: JSON.stringify({ action:'delete', id: tripId })
+      });
+      trips = trips.filter(t=>t.id!==tripId);
+      ALL_PINS = tripsToPins(trips);
+      closeLb();
+      renderFeedChips(); renderMasonry();
+      if(currentView==='boards') renderBoards();
+      toast('削除しました');
+    }catch(e){ toast('削除に失敗', true); }
+  }
 
-function getWeatherIcon(weather) {
-  const map = {
-    '晴れ': '☀️',
-    'くもり': '☁️',
-    '雨': '🌧️',
-    '雪': '❄️'
-  };
-  return map[weather] || '';
-}
+  // ============== NEW BOARD ==============
+  function openNewBoard(){
+    const m = document.getElementById('nb-modal');
+    m.classList.add('open');
+    const name = document.getElementById('nb-name');
+    name.value = '';
+    setTimeout(()=>name.focus(), 200);
+    document.querySelectorAll('#nb-emoji button').forEach(b=>{
+      b.classList.toggle('selected', b.dataset.e==='📷');
+      b.onclick = ()=>{
+        document.querySelectorAll('#nb-emoji button').forEach(x=>x.classList.remove('selected'));
+        b.classList.add('selected');
+      };
+    });
+    document.getElementById('nb-cancel').onclick = closeNewBoard;
+    m.onclick = (e)=>{ if(e.target===m) closeNewBoard(); };
+    document.getElementById('nb-ok').onclick = ()=>{
+      const nm = name.value.trim();
+      if(!nm){ name.focus(); return; }
+      const sel = document.querySelector('#nb-emoji button.selected');
+      const emoji = sel ? sel.dataset.e : '📷';
+      const id = 'b_' + Math.random().toString(36).slice(2,9);
+      boards.push({ id, name:nm, emoji });
+      saveBoards(boards);
+      closeNewBoard();
+      renderBoards(); renderFeedChips();
+      toast(`「${nm}」を作成しました`);
+    };
+  }
+  function closeNewBoard(){ document.getElementById('nb-modal').classList.remove('open'); }
 
-function getCompanionIcon(companion) {
-  const map = {
-    '一人': '🧍',
-    '家族': '👨‍👩‍👦',
-    '友だち': '👥'
-  };
-  return map[companion] || '';
-}
+  // ============== VIEW SWITCH ==============
+  function showView(name){
+    currentView = name;
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    const t = document.getElementById('view-'+name);
+    if(t) t.classList.add('active');
+    const profile = document.getElementById('profile');
+    const tabs = document.getElementById('pf-tabs-wrap');
+    if(profile) profile.style.display = (name === 'board-detail') ? 'none' : '';
+    if(tabs) tabs.style.display = (name === 'board-detail') ? 'none' : '';
+    document.querySelectorAll('.pf-tab[data-view]').forEach(tab=>{
+      tab.classList.toggle('active', tab.dataset.view === name);
+    });
+    window.scrollTo({top:0, behavior:'instant'});
+  }
+  document.querySelectorAll('.pf-tab[data-view]').forEach(t=>{
+    t.addEventListener('click', ()=> showView(t.dataset.view));
+  });
 
-function formatDate(dateStr) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  const year = d.getFullYear();
-  const month = d.getMonth() + 1;
-  const day = d.getDate();
-  const weekday = ['日', '月', '火', '水', '木', '金', '土'][d.getDay()];
-  return `${year}/${month}/${day}（${weekday}）`;
-}
+  // ============== SEARCH ==============
+  const searchInput = document.getElementById('search-input');
+  if(searchInput){
+    let st;
+    searchInput.addEventListener('input', (e)=>{
+      clearTimeout(st);
+      st = setTimeout(()=>{
+        searchQuery = e.target.value.trim();
+        renderMasonry();
+      }, 180);
+    });
+  }
 
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
+  // ============== PROFILE ==============
+  (function setupProfile(){
+    const saved = (()=>{ try{return JSON.parse(localStorage.getItem(TABILOG_CONFIG.PROFILE_KEY)||'{}')}catch(e){return {}} })();
+    const nameEl = document.getElementById('profile-name');
+    const handleEl = document.getElementById('profile-handle');
+    const initialEl = document.getElementById('avatar-initial');
+    const avatarEl = document.getElementById('avatar');
+    const input = document.getElementById('avatar-input');
 
-function showError() {
-  const container = document.getElementById('timeline');
-  container.innerHTML = `
-    <div class="empty-state">
-      <div class="empty-emoji">⚠️</div>
-      <div class="empty-title">読み込めませんでした</div>
-      <div class="empty-msg">ネットワーク接続を確認して<br>もう一度お試しください</div>
-      <button class="empty-btn" onclick="location.reload()">
-        <span>🔄</span>
-        <span>再読み込み</span>
-      </button>
-    </div>
-  `;
-}
+    function paint(){
+      const name = saved.name || 'Tabilogger';
+      const handle = saved.handle || '@tabilog';
+      nameEl.textContent = name;
+      handleEl.textContent = handle;
+      initialEl.textContent = (name[0]||'T').toUpperCase();
+      const existing = avatarEl.querySelector('img');
+      if(existing) existing.remove();
+      if(saved.avatar){
+        const img = document.createElement('img');
+        img.src = saved.avatar;
+        avatarEl.insertBefore(img, avatarEl.firstChild);
+      }
+    }
+    paint();
+    avatarEl.addEventListener('click', (e)=>{
+      if(e.target.closest('input')) return;
+      input.click();
+    });
+    input.addEventListener('change', async (e)=>{
+      const file = e.target.files[0];
+      if(!file) return;
+      try{
+        const dataUrl = await fileToDataUrl(file, 400);
+        saved.avatar = dataUrl;
+        localStorage.setItem(TABILOG_CONFIG.PROFILE_KEY, JSON.stringify(saved));
+        paint();
+        toast('プロフィール画像を更新');
+      }catch(err){ toast('画像の読み込みに失敗', true); }
+    });
+    document.getElementById('btn-edit-profile').addEventListener('click', ()=>{
+      const newName = prompt('表示名を入力', saved.name || 'Tabilogger');
+      if(newName === null) return;
+      if(newName.trim()) saved.name = newName.trim();
+      const newHandle = prompt('ユーザー名（@なし）', (saved.handle||'@tabilog').replace(/^@/,''));
+      if(newHandle === null) return;
+      if(newHandle.trim()) saved.handle = '@' + newHandle.trim().replace(/^@/,'');
+      localStorage.setItem(TABILOG_CONFIG.PROFILE_KEY, JSON.stringify(saved));
+      paint();
+    });
+    document.getElementById('btn-share').addEventListener('click', async ()=>{
+      try{
+        if(navigator.share){
+          await navigator.share({title:'tabilog', text:'旅の記録', url: location.href});
+        } else {
+          await navigator.clipboard.writeText(location.href);
+          toast('URLをコピーしました');
+        }
+      }catch(e){}
+    });
 
-function showToast(message, isError = false) {
-  const toast = document.getElementById('toast');
-  toast.textContent = message;
-  toast.className = isError ? 'toast error show' : 'toast show';
-  setTimeout(() => {
-    toast.classList.remove('show');
-  }, 2500);
-}
+    function fileToDataUrl(file, maxSide){
+      return new Promise((resolve,reject)=>{
+        const reader = new FileReader();
+        reader.onload = ()=>{
+          const img = new Image();
+          img.onload = ()=>{
+            const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+            const w = Math.round(img.width*scale), h = Math.round(img.height*scale);
+            const cv = document.createElement('canvas');
+            cv.width = w; cv.height = h;
+            cv.getContext('2d').drawImage(img, 0, 0, w, h);
+            resolve(cv.toDataURL('image/jpeg', 0.9));
+          };
+          img.onerror = reject;
+          img.src = reader.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+  })();
+
+  // ============== DEMO FALLBACK ==============
+  function demoPins(){
+    const shots = [
+      { seed:'tokyo-night', destination:'東京駅', caption:'', h:800, highlight:'終電前の夜、光の筋だけが残る。始発のホーム、誰もいない空気が好き。', mood:'最高！', weather:'晴れ', routes:['東京','品川'], date:'2026-04-02' },
+      { seed:'ramen-bowl',  destination:'喜多方', caption:'朝ラー、正義。', h:600, mood:'楽しかった', weather:'くもり', routes:['郡山','会津若松'], date:'2026-03-21' },
+      { seed:'green-train', destination:'小海線', caption:'キハの音がいい。', h:900, mood:'最高！', weather:'晴れ', routes:['小淵沢','野辺山'], date:'2026-03-14' },
+      { seed:'coast-view',  destination:'五能線', caption:'海沿いをゆっくり。', h:700, highlight:'波の音とディーゼルのシンクロ。時間の流れがゆるくなる。', mood:'最高！', weather:'晴れ', routes:['弘前','深浦'], date:'2026-02-28' },
+      { seed:'friends-laugh', destination:'京都', caption:'', h:750, mood:'楽しかった', weather:'晴れ', routes:['京都'], date:'2026-02-10' },
+      { seed:'bento-wood', destination:'仙台駅', caption:'牛タン弁当。勝ち。', h:650, mood:'最高！', weather:'晴れ', routes:['仙台'], date:'2026-01-24' },
+      { seed:'snow-platform', destination:'只見線', caption:'', h:1050, highlight:'雪の日にしか撮れない絵があると信じて、始発で出た。', mood:'つかれた…', weather:'雪', routes:['会津若松','只見'], date:'2026-01-15' },
+      { seed:'sunset-window', destination:'北陸本線', caption:'車窓の夕陽。', h:720, mood:'最高！', weather:'晴れ', routes:['富山','金沢'], date:'2025-12-30' },
+      { seed:'station-sign', destination:'大阪', caption:'夜の大阪、雑踏が心地いい。', h:800, mood:'楽しかった', weather:'くもり', routes:['新大阪','大阪'], date:'2025-12-18' },
+      { seed:'mountain-lake', destination:'長野', caption:'', h:900, highlight:'朝5時に起きた甲斐があった。風がなくなる瞬間だけ湖面が鏡になる。', mood:'最高！', weather:'晴れ', routes:['松本'], date:'2025-11-20' },
+      { seed:'curry-plate', destination:'横浜', caption:'横須賀海軍カレー。', h:640, mood:'楽しかった', weather:'晴れ', routes:['横浜','横須賀'], date:'2025-10-12' },
+      { seed:'tunnel-light', destination:'身延線', caption:'', h:780, mood:'最高！', weather:'晴れ', routes:['甲府','富士'], date:'2025-09-30' },
+      { seed:'street-dog', destination:'下北沢', caption:'友達の犬、旅仲間。', h:850, mood:'楽しかった', weather:'晴れ', routes:['下北沢'], date:'2025-09-15' },
+      { seed:'ekiben-hokkaido', destination:'函館', caption:'いか飯、うまい。', h:620, mood:'最高！', weather:'晴れ', routes:['函館'], date:'2025-08-22' },
+      { seed:'blue-sea', destination:'紀勢本線', caption:'', h:1000, highlight:'スマホだと再現できない青。だから一眼を持ってきた。', mood:'最高！', weather:'晴れ', routes:['新宮','紀伊勝浦'], date:'2025-08-05' },
+    ];
+    const fakeTrips = shots.map((s,i)=>({
+      id: 900000+i, destination:s.destination, date:s.date, highlight:s.highlight||'',
+      mood:s.mood, weather:s.weather, routes:s.routes,
+      lat: 35 + Math.random()*5, lng: 135 + Math.random()*4,
+      photos:[{ url:`https://picsum.photos/seed/${s.seed}/800/${s.h}`, caption:s.caption }]
+    }));
+    trips = fakeTrips; // so stats work
+    return tripsToPins(fakeTrips);
+  }
+
+  // ============== BOOT ==============
+  async function boot(){
+    trips = await loadTrips();
+    let pins = tripsToPins(trips);
+    if(pins.length === 0){ pins = demoPins(); }
+    ALL_PINS = pins;
+    renderFeedChips();
+    renderMasonry();
+    renderBoards();
+  }
+  boot();
+})();
+
 </script>
 </body>
 </html>
