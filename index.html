@@ -2,1345 +2,784 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#ffffff">
-<title>新規投稿 / tabilog</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
+<title>🚃 旅ログ</title>
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --orange: #f97316; --orange-dark: #ea580c; --blue: #1e293b; --gray: #64748b; --light: #94a3b8; --border: #e2e8f0; --bg-light: #f8fafc; --bg-selected: #fff7ed; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Segoe UI", sans-serif; background: #fff; color: var(--blue); -webkit-font-smoothing: antialiased; overscroll-behavior: none; }
+input, textarea, button { font-family: inherit; font-size: 16px; }
+input[type="date"], input[type="time"] { font-size: 16px; }
 
-:root{
-  --bg:#ffffff;
-  --bg-soft:#f7f7f7;
-  --bg-card:#f2f2f2;
-  --bg-hover:#e9e9e9;
-  --line:#ececec;
-  --line-2:#d9d9d9;
-  --ink:#111111;
-  --ink-dim:#4b4b4b;
-  --ink-mute:#767676;
-  --ink-faint:#a8a8a8;
-  --accent:#e60023;
-  --accent-hover:#b5001b;
-  --success:#16a34a;
-  --radius-sm:10px;
-  --radius-md:16px;
-  --radius-lg:24px;
-  --shadow-sm:0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md:0 4px 16px rgba(0,0,0,0.08);
-  --shadow-lg:0 24px 60px rgba(0,0,0,0.18);
-}
+.app { max-width: 430px; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+.header { padding: 12px 16px 4px; text-align: center; }
+.header-title { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px; }
+.header-icon { font-size: 18px; }
+.header-text { font-size: 14px; font-weight: 700; color: var(--blue); }
+.progress { display: flex; gap: 4px; padding: 0 16px 8px; }
+.progress-dot { height: 4px; flex: 1; border-radius: 4px; background: #e5e7eb; transition: background 0.3s; }
+.progress-dot.active { background: var(--orange); }
 
-html,body{background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
-body{
-  font-family:"Inter","Noto Sans JP",-apple-system,BlinkMacSystemFont,sans-serif;
-  min-height:100dvh;
-  overscroll-behavior-y:contain;
-  padding-bottom:calc(96px + env(safe-area-inset-bottom));
-}
-input,textarea,button,select{font-family:inherit;color:inherit;font-size:16px}
-a{color:inherit;text-decoration:none}
-img{display:block;max-width:100%}
+.content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 20px; }
+.nav { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px 24px; }
+.nav-back { padding: 10px 20px; border-radius: 99px; font-size: 14px; font-weight: 500; color: var(--gray); background: #f1f5f9; border: none; cursor: pointer; }
+.nav-next { padding: 10px 24px; border-radius: 99px; font-size: 14px; font-weight: 700; color: #fff; background: linear-gradient(135deg, #f97316, #ea580c); border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(249,115,22,0.3); }
 
-:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+/* Intro */
+.intro { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; padding: 24px; text-align: center; min-height: 60vh; }
+.intro-emoji { font-size: 72px; margin-bottom: 16px; }
+.intro-title { font-size: 32px; font-weight: 900; margin-bottom: 8px; }
+.intro-sub { font-size: 16px; color: var(--light); margin-bottom: 24px; }
+.intro-box { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 16px; padding: 20px; text-align: left; width: 100%; max-width: 340px; }
+.intro-box p { font-size: 14px; line-height: 1.7; color: #475569; }
+.intro-box .accent { color: var(--orange); font-weight: 600; }
 
-.jp{font-family:"Noto Sans JP","Inter",sans-serif}
+/* Form elements */
+.section { padding: 0 20px; }
+.label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--light); margin-bottom: 8px; }
+.field { margin-bottom: 20px; }
+.text-input { width: 100%; padding: 12px 16px; border-radius: 12px; border: 2px solid var(--border); font-size: 15px; outline: none; color: var(--blue); background: #fff; transition: border-color 0.2s; }
+.text-input:focus, .text-input.filled { border-color: var(--orange); }
+.text-input::placeholder { color: #cbd5e1; }
+textarea.text-input { resize: none; line-height: 1.6; }
 
-/* ====== NAV ====== */
-.nav{
-  position:sticky;top:0;z-index:50;
-  background:rgba(255,255,255,0.9);
-  backdrop-filter:saturate(180%) blur(18px);
-  -webkit-backdrop-filter:saturate(180%) blur(18px);
-  border-bottom:1px solid var(--line);
-}
-.nav-inner{
-  max-width:720px;margin:0 auto;
-  padding:12px 16px;
-  display:flex;align-items:center;gap:12px;
-}
-.nav-back{
-  width:40px;height:40px;border-radius:50%;
-  display:inline-flex;align-items:center;justify-content:center;
-  background:transparent;border:none;color:var(--ink);
-  cursor:pointer;transition:background .15s;flex-shrink:0;
-}
-.nav-back:hover{background:var(--bg-hover)}
-.nav-back svg{width:22px;height:22px}
-.nav-title{
-  flex:1;font-size:18px;font-weight:700;letter-spacing:-0.01em;
-}
-.nav-save{
-  padding:10px 18px;border-radius:999px;
-  background:var(--accent);color:#fff;border:none;
-  font-size:15px;font-weight:700;cursor:pointer;
-  transition:all .15s;
-  display:inline-flex;align-items:center;gap:6px;
-  flex-shrink:0;
-}
-.nav-save:hover:not(:disabled){background:var(--accent-hover)}
-.nav-save:disabled{background:#efefef;color:var(--ink-mute);cursor:not-allowed}
-.nav-save svg{width:14px;height:14px}
+.chip-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { padding: 10px 16px; border-radius: 12px; border: 2px solid var(--border); background: var(--bg-light); font-size: 14px; font-weight: 500; color: var(--gray); cursor: pointer; transition: all 0.2s; user-select: none; -webkit-tap-highlight-color: transparent; }
+.chip.selected { border-color: var(--orange); background: var(--bg-selected); color: var(--orange-dark); transform: scale(1.03); }
+.chip-weather { flex: 1; text-align: center; padding: 12px 8px; }
+.chip-weather .emoji { font-size: 24px; display: block; margin-bottom: 4px; }
+.chip-weather .wlabel { font-size: 12px; }
 
-/* ====== MAIN ====== */
-.wrap{max-width:720px;margin:0 auto;padding:24px 16px 40px}
-.section{margin-bottom:28px}
-.section-label{
-  font-size:13px;font-weight:700;color:var(--ink);
-  margin-bottom:10px;
-  display:flex;align-items:center;justify-content:space-between;gap:8px;
-}
-.section-label .opt{color:var(--ink-mute);font-weight:500;font-size:12px}
+/* Route */
+.route-card { margin-bottom: 16px; padding: 16px; border-radius: 16px; background: var(--bg-light); border: 1px solid var(--border); position: relative; }
+.route-num { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 10px; border-radius: 99px; background: var(--orange); color: #fff; margin-bottom: 12px; }
+.route-delete { position: absolute; top: 16px; right: 16px; font-size: 12px; color: #cbd5e1; background: none; border: none; cursor: pointer; }
+.route-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 4px; }
+.route-arrow { text-align: center; font-size: 18px; color: #cbd5e1; padding: 2px 0; }
+.route-label { font-size: 11px; color: var(--light); margin-bottom: 4px; display: block; }
+.route-input { width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 14px; outline: none; color: var(--blue); }
+.route-input:focus { border-color: var(--orange); }
+.add-btn { width: 100%; padding: 12px; border-radius: 12px; border: 2px dashed var(--orange); background: var(--bg-selected); color: var(--orange); font-size: 14px; font-weight: 700; cursor: pointer; }
 
-/* ====== PHOTO ZONE ====== */
-.photo-zone{
-  position:relative;
-  width:100%;aspect-ratio:4/5;
-  background:var(--bg-card);
-  border-radius:var(--radius-lg);
-  overflow:hidden;
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;
-  transition:background .15s;
-}
-.photo-zone.has-photo{cursor:default;aspect-ratio:auto}
-.photo-zone:hover:not(.has-photo){background:var(--bg-hover)}
-.photo-zone.dragover{background:#ffe9ed;outline:3px dashed var(--accent);outline-offset:-8px}
+/* Photos */
+.photo-upload { border-radius: 16px; overflow: hidden; border: 2px dashed #cbd5e1; background: #f1f5f9; min-height: 120px; cursor: pointer; position: relative; margin-bottom: 8px; transition: border-color 0.2s; }
+.photo-upload.has-image { border-style: solid; border-color: var(--orange); min-height: auto; }
+.photo-upload img { width: 100%; max-height: 300px; object-fit: cover; display: block; }
+.photo-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px; }
+.photo-placeholder .emoji { font-size: 32px; margin-bottom: 4px; }
+.photo-placeholder .plabel { font-size: 12px; color: var(--light); }
+.photo-upload input[type="file"] { display: none; }
+.photo-item { margin-bottom: 16px; }
 
-.pz-empty{
-  display:flex;flex-direction:column;align-items:center;gap:18px;
-  padding:32px;text-align:center;
-}
-.pz-icon{
-  width:72px;height:72px;border-radius:50%;
-  background:#fff;display:flex;align-items:center;justify-content:center;
-  box-shadow:var(--shadow-md);
-}
-.pz-icon svg{width:30px;height:30px;color:var(--ink)}
-.pz-title{font-size:20px;font-weight:700;letter-spacing:-0.01em}
-.pz-sub{font-size:14px;color:var(--ink-mute);line-height:1.55;max-width:320px}
-.pz-btns{display:flex;gap:10px;margin-top:4px;flex-wrap:wrap;justify-content:center}
-.pz-btn{
-  padding:12px 22px;border-radius:999px;
-  background:var(--ink);color:#fff;border:none;
-  font-size:15px;font-weight:700;cursor:pointer;
-  transition:background .15s;
-}
-.pz-btn:hover{background:#333}
-.pz-btn.ghost{background:var(--bg-hover);color:var(--ink)}
-.pz-btn.ghost:hover{background:#dcdcdc}
+/* Senses */
+.sense-section { margin-bottom: 20px; }
+.sense-title { font-size: 14px; font-weight: 700; color: #475569; margin-bottom: 10px; }
+.tag-group { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag { padding: 8px 14px; border-radius: 99px; border: 1.5px solid var(--border); background: var(--bg-light); font-size: 13px; font-weight: 500; color: var(--gray); cursor: pointer; transition: all 0.2s; user-select: none; -webkit-tap-highlight-color: transparent; }
+.tag.selected { border-color: var(--orange); background: var(--bg-selected); color: var(--orange-dark); transform: scale(1.05); }
 
-.pz-preview{
-  width:100%;
-  display:block;
-  max-height:80vh;
-  object-fit:contain;
-  background:#111;
-}
+/* Mood */
+.mood-section { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; padding: 0 20px; }
+.mood-prompt { font-size: 14px; color: var(--light); margin-bottom: 32px; }
+.mood-list { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 300px; }
+.mood-btn { display: flex; align-items: center; gap: 16px; padding: 16px 20px; border-radius: 16px; border: 2px solid var(--border); background: var(--bg-light); cursor: pointer; transition: all 0.2s; user-select: none; -webkit-tap-highlight-color: transparent; }
+.mood-btn.selected { border-color: var(--orange); background: var(--bg-selected); transform: scale(1.02); }
+.mood-emoji { font-size: 28px; }
+.mood-label { font-size: 15px; font-weight: 500; color: var(--gray); }
+.mood-btn.selected .mood-label { color: var(--orange-dark); }
 
-.pz-actions{
-  position:absolute;top:12px;right:12px;
-  display:flex;gap:8px;
-}
-.pz-chip{
-  padding:8px 14px;border-radius:999px;
-  background:rgba(255,255,255,0.96);
-  border:none;color:var(--ink);
-  font-size:13px;font-weight:700;cursor:pointer;
-  box-shadow:var(--shadow-md);
-  display:inline-flex;align-items:center;gap:6px;
-}
-.pz-chip:hover{background:#fff}
-.pz-chip.danger{color:var(--accent)}
-.pz-chip svg{width:14px;height:14px}
+/* Highlight */
+.highlight-section { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 50vh; padding: 0 20px; }
+.hl-icon { font-size: 48px; margin-bottom: 12px; }
+.hl-prompt { font-size: 14px; color: var(--light); margin-bottom: 4px; }
+.hl-sub { font-size: 12px; color: #cbd5e1; margin-bottom: 24px; }
+.hl-field { width: 100%; margin-bottom: 24px; }
+.hl-field-label { font-size: 12px; color: var(--light); margin-bottom: 8px; }
 
-/* multi-photo secondary */
-.photo-strip{
-  display:flex;gap:8px;margin-top:10px;
-  overflow-x:auto;padding-bottom:4px;
-  scroll-snap-type:x mandatory;
-}
-.photo-strip::-webkit-scrollbar{display:none}
-.photo-thumb{
-  position:relative;flex-shrink:0;
-  width:72px;height:72px;border-radius:12px;
-  overflow:hidden;cursor:pointer;
-  background:var(--bg-card);
-  scroll-snap-align:start;
-}
-.photo-thumb img{width:100%;height:100%;object-fit:cover}
-.photo-thumb .rm{
-  position:absolute;top:3px;right:3px;
-  width:20px;height:20px;border-radius:50%;
-  background:rgba(0,0,0,0.72);color:#fff;border:none;
-  font-size:12px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-}
-.photo-thumb.add{
-  border:1.5px dashed var(--line-2);background:transparent;
-  display:flex;align-items:center;justify-content:center;
-  color:var(--ink-mute);font-size:24px;font-weight:300;
-}
-.photo-thumb.add:hover{background:var(--bg-card);color:var(--ink);border-color:var(--ink-mute)}
+/* Done */
+.done-section { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; padding: 0 20px; text-align: center; }
+.done-emoji { font-size: 64px; margin-bottom: 16px; }
+.done-title { font-size: 24px; font-weight: 900; margin-bottom: 8px; }
+.done-msg { font-size: 14px; color: var(--gray); margin-bottom: 8px; }
+.done-meta { font-size: 12px; color: var(--light); margin-bottom: 32px; }
+.done-btns { width: 100%; max-width: 280px; display: flex; flex-direction: column; gap: 12px; }
+.btn-export { width: 100%; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 700; color: #fff; background: linear-gradient(135deg, #f97316, #ea580c); border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(249,115,22,0.3); }
+.btn-new { width: 100%; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 500; color: var(--gray); background: #f1f5f9; border: none; cursor: pointer; }
+.btn-save { width: 100%; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 700; color: #fff; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(59,130,246,0.3); display: flex; align-items: center; justify-content: center; gap: 8px; }
+.btn-save:disabled { background: #94a3b8; box-shadow: none; cursor: not-allowed; }
+.btn-map { width: 100%; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 600; color: var(--orange); background: var(--bg-selected); border: 2px solid var(--orange); cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.save-status { text-align: center; margin-bottom: 12px; font-size: 13px; }
+.save-status.success { color: #16a34a; }
+.save-status.error { color: #dc2626; }
+.spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-/* ====== LOCATION CARD ====== */
-.loc-card{
-  display:flex;align-items:center;gap:12px;
-  padding:14px;background:var(--bg-card);
-  border-radius:var(--radius-md);
-  cursor:pointer;transition:background .15s;
-}
-.loc-card:hover{background:var(--bg-hover)}
-.loc-map{
-  width:64px;height:64px;border-radius:12px;
-  background:#e8e8e8 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path d="M0 0h64v64H0z" fill="%23e8e8e8"/><path d="M0 24l32-8 32 8v16L32 48 0 40z" fill="%23d4d4d4"/><circle cx="32" cy="30" r="6" fill="%23e60023"/><circle cx="32" cy="30" r="2" fill="%23fff"/></svg>');
-  background-size:cover;flex-shrink:0;
-  position:relative;
-}
-.loc-map.empty{
-  background:#e8e8e8;
-  display:flex;align-items:center;justify-content:center;
-  color:var(--ink-mute);
-}
-.loc-map.empty svg{width:24px;height:24px}
-.loc-info{flex:1;min-width:0}
-.loc-label{
-  font-size:11px;font-weight:700;color:var(--ink-mute);
-  letter-spacing:0.08em;text-transform:uppercase;margin-bottom:2px;
-  display:flex;align-items:center;gap:6px;
-}
-.loc-label .pulse{
-  width:6px;height:6px;border-radius:50%;background:var(--success);
-  animation:pulse 1.6s ease-in-out infinite;
-}
-.loc-label.off .pulse{background:var(--ink-faint);animation:none}
-.loc-place{
-  font-size:16px;font-weight:700;color:var(--ink);
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  font-family:"Noto Sans JP",sans-serif;
-}
-.loc-coords{
-  font-size:12px;color:var(--ink-mute);margin-top:2px;
-  font-variant-numeric:tabular-nums;
-}
-.loc-action{
-  padding:8px 14px;border-radius:999px;
-  background:#fff;border:1px solid var(--line-2);
-  font-size:13px;font-weight:700;color:var(--ink);cursor:pointer;
-  flex-shrink:0;
-}
-.loc-action:hover{background:var(--bg-card)}
+.hint { font-size: 12px; color: var(--light); margin-bottom: 16px; }
+.toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: var(--blue); color: #fff; padding: 10px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; z-index: 50; box-shadow: 0 4px 20px rgba(0,0,0,0.2); animation: fadeIn 0.3s; }
+@keyframes fadeIn { from { opacity:0; transform: translateX(-50%) translateY(10px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
 
-@keyframes pulse{
-  0%,100%{opacity:1;transform:scale(1)}
-  50%{opacity:0.5;transform:scale(0.8)}
+/* safe area for newer iPhones */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .nav { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
 }
-
-/* ====== STORY TEXTAREA ====== */
-.story{
-  position:relative;
-  padding:20px 20px 14px;
-  background:var(--bg-card);
-  border-radius:var(--radius-md);
-  transition:background .15s;
-}
-.story:focus-within{background:#efefef}
-.story textarea{
-  width:100%;min-height:120px;max-height:400px;resize:none;
-  background:transparent;border:none;outline:none;
-  font-family:"Noto Sans JP","Inter",sans-serif;
-  font-size:17px;line-height:1.7;color:var(--ink);
-  font-weight:500;
-}
-.story textarea::placeholder{color:var(--ink-mute);font-weight:400}
-.story-foot{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-top:10px;gap:8px;
-}
-.story-prompts{
-  display:flex;gap:6px;flex-wrap:wrap;flex:1;min-width:0;overflow-x:auto;
-  scrollbar-width:none;
-}
-.story-prompts::-webkit-scrollbar{display:none}
-.prompt-chip{
-  padding:6px 12px;border-radius:999px;
-  background:#fff;border:1px solid var(--line-2);
-  font-size:13px;color:var(--ink-dim);cursor:pointer;white-space:nowrap;
-  transition:all .15s;
-  font-family:"Noto Sans JP",sans-serif;
-  min-height:32px;
-}
-.prompt-chip:hover{border-color:var(--ink);color:var(--ink)}
-.mic-btn{
-  width:44px;height:44px;border-radius:50%;
-  background:#fff;border:1px solid var(--line-2);
-  color:var(--ink);cursor:pointer;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  transition:all .15s;
-}
-.mic-btn:hover{border-color:var(--ink)}
-.mic-btn.rec{background:var(--accent);color:#fff;border-color:var(--accent);animation:pulse-rec 1.4s ease-in-out infinite}
-@keyframes pulse-rec{
-  0%,100%{box-shadow:0 0 0 0 rgba(230,0,35,0.3)}
-  50%{box-shadow:0 0 0 10px rgba(230,0,35,0)}
-}
-.mic-btn svg{width:18px;height:18px}
-
-/* ====== BOARD PICKER ====== */
-.board-picker{
-  display:flex;gap:8px;flex-wrap:wrap;
-}
-.board-chip{
-  padding:9px 14px 9px 12px;
-  border-radius:999px;background:#fff;
-  border:1.5px solid var(--line-2);
-  font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;
-  display:inline-flex;align-items:center;gap:8px;
-  transition:all .15s;
-  font-family:"Noto Sans JP","Inter",sans-serif;
-  min-height:40px;
-}
-.board-chip:hover{border-color:var(--ink)}
-.board-chip.selected{
-  background:var(--ink);color:#fff;border-color:var(--ink);
-}
-.board-chip .emo{font-size:15px}
-.board-chip.new{
-  border-style:dashed;color:var(--ink-mute);
-}
-.board-chip.new:hover{color:var(--ink);border-color:var(--ink)}
-
-/* ====== DETAILS (collapse) ====== */
-.details{
-  background:var(--bg-card);
-  border-radius:var(--radius-md);
-  overflow:hidden;
-}
-.details-head{
-  padding:14px 18px;
-  display:flex;align-items:center;justify-content:space-between;
-  cursor:pointer;font-size:15px;font-weight:700;
-  user-select:none;
-}
-.details-head .chev{
-  transition:transform .2s;
-  color:var(--ink-mute);
-}
-.details.open .details-head .chev{transform:rotate(180deg)}
-.details-body{
-  display:none;
-  padding:0 18px 18px;
-}
-.details.open .details-body{display:block}
-.details-body .row{
-  display:grid;grid-template-columns:96px 1fr;align-items:center;
-  padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.06);gap:8px;
-}
-.details-body .row:last-child{border-bottom:none}
-.details-body .k{
-  font-size:13px;color:var(--ink-mute);font-weight:600;
-  font-family:"Noto Sans JP",sans-serif;
-}
-.details-body .v{font-size:15px}
-.details-body input,
-.details-body select{
-  width:100%;padding:8px 10px;border-radius:8px;
-  border:1px solid var(--line-2);background:#fff;
-  font-size:15px;outline:none;transition:border-color .15s;
-}
-.details-body input:focus,.details-body select:focus{border-color:var(--ink)}
-
-.mood-picker{display:flex;gap:6px;flex-wrap:wrap}
-.mood-btn{
-  padding:6px 12px;border-radius:999px;
-  background:#fff;border:1px solid var(--line-2);
-  font-size:13px;color:var(--ink-dim);cursor:pointer;
-  font-family:"Noto Sans JP",sans-serif;min-height:32px;
-}
-.mood-btn.on{background:var(--ink);color:#fff;border-color:var(--ink)}
-
-/* ====== BOTTOM ACTION (mobile-friendly duplicate) ====== */
-.save-fab{
-  position:fixed;left:0;right:0;
-  bottom:calc(72px + env(safe-area-inset-bottom));
-  padding:10px 16px;z-index:40;
-  display:flex;justify-content:center;pointer-events:none;
-}
-.save-fab button{
-  pointer-events:auto;
-  padding:14px 32px;border-radius:999px;
-  background:var(--accent);color:#fff;border:none;
-  font-size:16px;font-weight:700;cursor:pointer;
-  box-shadow:0 12px 32px rgba(230,0,35,0.32);
-  display:inline-flex;align-items:center;gap:8px;
-  transition:background .15s, transform .15s;
-}
-.save-fab button:hover:not(:disabled){background:var(--accent-hover);transform:translateY(-1px)}
-.save-fab button:disabled{background:#c9c9c9;cursor:not-allowed;box-shadow:none;color:#fff}
-
-/* ====== BOTTOM TAB BAR (global) ====== */
-.tabbar{
-  position:fixed;left:0;right:0;bottom:0;z-index:60;
-  background:rgba(255,255,255,0.96);
-  backdrop-filter:saturate(180%) blur(18px);
-  -webkit-backdrop-filter:saturate(180%) blur(18px);
-  border-top:1px solid var(--line);
-  padding-bottom:env(safe-area-inset-bottom);
-}
-.tabbar-inner{
-  max-width:720px;margin:0 auto;
-  display:grid;grid-template-columns:repeat(3,1fr);
-  height:64px;
-}
-.tab{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-  color:var(--ink-mute);cursor:pointer;background:none;border:none;
-  transition:color .15s;text-decoration:none;
-  font-family:"Noto Sans JP","Inter",sans-serif;font-size:11px;font-weight:700;
-}
-.tab svg{width:24px;height:24px}
-.tab.on{color:var(--ink)}
-.tab.on svg{stroke-width:2.4}
-.tab:hover{color:var(--ink)}
-
-/* ====== TOAST ====== */
-.toast{
-  position:fixed;bottom:calc(150px + env(safe-area-inset-bottom));
-  left:50%;transform:translateX(-50%) translateY(8px);
-  background:#111;color:#fff;
-  padding:12px 22px;border-radius:999px;
-  font-size:14px;font-weight:600;white-space:nowrap;
-  opacity:0;pointer-events:none;z-index:100;
-  transition:all .25s cubic-bezier(.2,.8,.2,1);
-  box-shadow:0 12px 40px rgba(0,0,0,0.25);
-}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.toast.error{background:var(--accent)}
-
-/* ====== MODAL (new board) ====== */
-.modal{
-  position:fixed;inset:0;z-index:200;
-  background:rgba(0,0,0,0.5);
-  display:none;align-items:flex-end;justify-content:center;
-  padding:0;
-}
-.modal.open{display:flex;animation:fadein .2s}
-@keyframes fadein{from{opacity:0}to{opacity:1}}
-@media (min-width:640px){
-  .modal{align-items:center;padding:20px}
-}
-.modal-card{
-  width:100%;max-width:480px;
-  background:#fff;
-  border-radius:24px 24px 0 0;
-  padding:24px 22px calc(22px + env(safe-area-inset-bottom));
-  animation:slideup .25s cubic-bezier(.2,.8,.2,1);
-}
-@media (min-width:640px){
-  .modal-card{border-radius:24px}
-}
-@keyframes slideup{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.modal-handle{
-  width:40px;height:4px;border-radius:2px;background:#e5e5e5;
-  margin:0 auto 14px;
-}
-.modal-title{font-size:20px;font-weight:800;margin-bottom:4px;letter-spacing:-0.02em}
-.modal-sub{color:var(--ink-mute);font-size:14px;margin-bottom:18px;font-family:"Noto Sans JP",sans-serif}
-
-.form-row{margin-bottom:14px}
-.form-label{
-  display:block;font-size:12px;font-weight:700;
-  color:var(--ink-mute);margin-bottom:6px;
-  letter-spacing:0.04em;
-  font-family:"Noto Sans JP","Inter",sans-serif;
-}
-.input{
-  width:100%;padding:12px 14px;border-radius:12px;
-  background:var(--bg-card);border:1.5px solid transparent;
-  font-size:16px;outline:none;transition:all .15s;
-}
-.input:focus{background:#fff;border-color:var(--ink)}
-.emoji-grid{
-  display:grid;grid-template-columns:repeat(6,1fr);gap:6px;
-}
-.emoji-grid button{
-  aspect-ratio:1;border-radius:10px;
-  background:var(--bg-card);border:1.5px solid transparent;
-  font-size:22px;cursor:pointer;transition:all .15s;
-}
-.emoji-grid button:hover{background:var(--bg-hover)}
-.emoji-grid button.selected{background:#fff;border-color:var(--ink)}
-
-.modal-actions{display:flex;gap:8px;margin-top:20px}
-.modal-actions button{
-  flex:1;padding:14px;border-radius:999px;
-  font-size:15px;font-weight:700;border:none;cursor:pointer;
-  transition:all .15s;min-height:48px;
-}
-.modal-actions .cancel{background:var(--bg-card);color:var(--ink)}
-.modal-actions .cancel:hover{background:var(--bg-hover)}
-.modal-actions .ok{background:var(--ink);color:#fff}
-.modal-actions .ok:hover{background:#333}
-.modal-actions .ok:disabled{background:#ccc;cursor:not-allowed}
-
-/* ====== RESPONSIVE ====== */
-@media (max-width:640px){
-  .nav-inner{padding:10px 12px}
-  .wrap{padding:16px 14px 32px}
-  .section{margin-bottom:24px}
-}
-
-/* subtle fade on load */
-.fade-in{animation:fi .3s ease-out}
-@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 </style>
 </head>
 <body>
+<div id="root"></div>
 
-<!-- NAV -->
-<nav class="nav">
-  <div class="nav-inner">
-    <a class="nav-back" href="timeline.html" aria-label="戻る">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-    </a>
-    <div class="nav-title">新規投稿</div>
-    <button class="nav-save" id="save-top" disabled>
-      <span id="save-top-label">保存</span>
-    </button>
-  </div>
-</nav>
-
-<main class="wrap" id="root"></main>
-
-<!-- Save FAB (mobile visible) -->
-<div class="save-fab">
-  <button id="save-fab" disabled>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M5 13l4 4L19 7"/></svg>
-    <span id="save-fab-label">保存する</span>
-  </button>
-</div>
-
-<!-- Bottom tab bar -->
-<nav class="tabbar" aria-label="main">
-  <div class="tabbar-inner">
-    <a class="tab" href="timeline.html" aria-label="フィード">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
-      フィード
-    </a>
-    <a class="tab" href="map.html" aria-label="マップ">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
-      マップ
-    </a>
-    <a class="tab on" href="index.html" aria-label="新規投稿">
-      <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
-      投稿
-    </a>
-  </div>
-</nav>
-
-<!-- TOAST -->
-<div class="toast" id="toast"></div>
-
-<!-- NEW BOARD MODAL -->
-<div class="modal" id="nb-modal" role="dialog" aria-modal="true" aria-labelledby="nb-title">
-  <div class="modal-card">
-    <div class="modal-handle"></div>
-    <div class="modal-title" id="nb-title">新しいボードをつくる</div>
-    <div class="modal-sub jp">テーマを決めて、写真をまとめよう。</div>
-    <div class="form-row">
-      <label class="form-label" for="nb-name">名前</label>
-      <input class="input jp" id="nb-name" placeholder="例：夏の海、友達との旅、撮り鉄" maxlength="24" autocomplete="off">
-    </div>
-    <div class="form-row">
-      <label class="form-label">カバー絵文字</label>
-      <div class="emoji-grid" id="nb-emoji">
-        <button type="button" data-e="📷" class="selected">📷</button>
-        <button type="button" data-e="🚃">🚃</button>
-        <button type="button" data-e="🍙">🍙</button>
-        <button type="button" data-e="🏔️">🏔️</button>
-        <button type="button" data-e="🌊">🌊</button>
-        <button type="button" data-e="🌆">🌆</button>
-        <button type="button" data-e="👥">👥</button>
-        <button type="button" data-e="🌸">🌸</button>
-        <button type="button" data-e="🍜">🍜</button>
-        <button type="button" data-e="🎞️">🎞️</button>
-        <button type="button" data-e="✨">✨</button>
-        <button type="button" data-e="🌙">🌙</button>
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="cancel" id="nb-cancel" type="button">キャンセル</button>
-      <button class="ok" id="nb-ok" type="button">作成</button>
-    </div>
-  </div>
-</div>
-
-<!-- Hidden file inputs -->
-<input type="file" id="file-primary" accept="image/*" hidden>
-<input type="file" id="file-camera" accept="image/*" capture="environment" hidden>
-<input type="file" id="file-add" accept="image/*" hidden>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/exifr/dist/full.umd.js"></script>
-<script>
-// ============================================================
-// CONFIG & STATE
-// ============================================================
-const TABILOG_CONFIG = {
-  GAS_URL: 'https://script.google.com/macros/s/AKfycbzWXxpZToLojg0-mqUJb9SOl1YWwQ3ptWM0SeAmf_FLPqGUMgRF5vkYQikY0tPsTLL7/exec',
-  MAPS_API_KEY: 'AIzaSyBsZufFWHnfHmh8Ew8PJtLarnPPG2DLs1k',
-  BOARDS_KEY: 'tabilog.boards.v1',
-  ASSIGN_KEY: 'tabilog.assign.v1',
-  DRAFT_KEY: 'tabilog.draft.v1',
-  PROFILE_KEY: 'tabilog.profile.v1',
+
+<script type="text/babel">
+const { useState, useRef, useEffect } = React;
+
+// ============================================
+// 設定（デプロイ前に変更してください）
+// ============================================
+const CONFIG = {
+  GAS_URL: 'https://script.google.com/macros/s/AKfycbzWXxpZToLojg0-mqUJb9SOl1YWwQ3ptWM0SeAmf_FLPqGUMgRF5vkYQikY0tPsTLL7/exec'
 };
 
-// boards loaded from localStorage (shared with timeline.html)
-const DEFAULT_BOARDS = [
-  { id:'b_tori',  name:'撮り鉄',     emoji:'🚃' },
-  { id:'b_food',  name:'飯テロ',     emoji:'🍙' },
-  { id:'b_scape', name:'風景',       emoji:'🏔️' },
-  { id:'b_people',name:'ひと',       emoji:'👥' },
+const STEPS = ["intro","basic","route","photos","senses","mood","highlight","done"];
+
+const MOODS = [
+  { emoji: "😆", label: "最高！" },
+  { emoji: "😊", label: "楽しかった" },
+  { emoji: "😌", label: "まあまあ" },
+  { emoji: "😐", label: "ふつう" },
+  { emoji: "😫", label: "つかれた…" },
 ];
-function loadBoards(){
-  try{
-    const raw = localStorage.getItem(TABILOG_CONFIG.BOARDS_KEY);
-    if(raw){ const p = JSON.parse(raw); if(Array.isArray(p) && p.length) return p; }
-  }catch(e){}
-  return DEFAULT_BOARDS.slice();
+
+const SENSES = [
+  { label: "👀 見たもの", options: ["景色がすごかった","電車・車両","建物・駅舎","人・街の雰囲気","夜景・朝焼け"] },
+  { label: "👂 聞こえた音", options: ["走行音がよかった","アナウンス","メロディ信号","街の音・自然の音","踏切の音"] },
+  { label: "🌡️ 体の感覚", options: ["暑かった","寒かった","風が気持ちよかった","疲れた","眠かった"] },
+];
+
+const WEATHERS = [
+  { emoji: "☀️", label: "晴れ" },
+  { emoji: "☁️", label: "くもり" },
+  { emoji: "🌧️", label: "雨" },
+  { emoji: "❄️", label: "雪" },
+];
+
+const TODAY = new Date().toISOString().split("T")[0];
+
+function getStepInfo(id) {
+  const map = {
+    intro: { icon: "🚃", title: "旅ログ" },
+    basic: { icon: "📅", title: "基本情報" },
+    route: { icon: "🗺️", title: "ルート" },
+    photos: { icon: "📷", title: "ベストショット" },
+    senses: { icon: "👀", title: "五感チェック" },
+    mood: { icon: "😊", title: "今日の気分" },
+    highlight: { icon: "✨", title: "ハイライト" },
+    done: { icon: "🎉", title: "完了" },
+  };
+  return map[id] || {};
 }
-function saveBoards(b){ localStorage.setItem(TABILOG_CONFIG.BOARDS_KEY, JSON.stringify(b)); }
-function loadAssign(){
-  try{ return JSON.parse(localStorage.getItem(TABILOG_CONFIG.ASSIGN_KEY)||'{}'); }catch(e){ return {}; }
-}
-function saveAssign(a){ localStorage.setItem(TABILOG_CONFIG.ASSIGN_KEY, JSON.stringify(a)); }
 
-// state
-const state = {
-  photos: [],      // {dataUrl, file, lat, lng, dateTaken}
-  story: '',
-  place: null,     // {name, lat, lng, source: 'exif'|'geo'|'manual'}
-  boards: [],      // [boardId]
-  mood: '',
-  weather: '',
-  date: new Date().toISOString().slice(0,10),
-  companion: '',
-  highlight: '',   // legacy mirror
-};
+function App() {
+  const [step, setStep] = useState(0);
+  const [data, setData] = useState({
+    date: TODAY,
+    destination: "",
+    weather: "",
+    companion: "",
+    routes: [{ from:"", dep:"", to:"", arr:"", line:"" }],
+    photos: [{ caption:"", image:null, lat:null, lng:null }, { caption:"", image:null, lat:null, lng:null }],
+    senses: {},
+    food: "",
+    mood: "",
+    highlight: "",
+    discovery: "",
+    gpsLat: null,  // 現在地GPS
+    gpsLng: null,
+  });
+  const [copied, setCopied] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState(null); // 'success' | 'error' | null
+  const [saved, setSaved] = useState(false);
+  const [gettingLocation, setGettingLocation] = useState(false);
+  const contentRef = useRef(null);
 
-let allBoards = loadBoards();
-let recognizer = null; // speech
+  useEffect(() => {
+    if (contentRef.current) contentRef.current.scrollTop = 0;
+  }, [step]);
 
-// ============================================================
-// TEMPLATES
-// ============================================================
-function render(){
-  const root = document.getElementById('root');
-  root.innerHTML = `
-    <!-- PHOTO -->
-    <section class="section fade-in">
-      <div class="section-label">
-        <span>写真 <span class="opt">・ 最大8枚</span></span>
-        <span class="opt jp" id="photo-count"></span>
-      </div>
-      <div class="photo-zone ${state.photos.length?'has-photo':''}" id="pz"></div>
-      <div class="photo-strip" id="strip"></div>
-    </section>
+  // 画像をリサイズする関数（長辺1200px、JPEG品質0.7）
+  const resizeImage = (base64Data) => {
+    return new Promise((resolve) => {
+      if (!base64Data || !base64Data.startsWith('data:image')) {
+        resolve(null);
+        return;
+      }
 
-    <!-- LOCATION -->
-    <section class="section fade-in" id="loc-section" style="${state.photos.length?'':'display:none'}">
-      <div class="section-label"><span>場所</span><span class="opt">EXIFから自動</span></div>
-      <div class="loc-card" id="loc-card"></div>
-    </section>
+      const img = new Image();
+      img.onload = () => {
+        const maxSize = 1200;
+        let { width, height } = img;
 
-    <!-- STORY -->
-    <section class="section fade-in" id="story-section" style="${state.photos.length?'':'display:none'}">
-      <div class="section-label">
-        <span>ここで感じたこと</span>
-        <span class="opt jp" id="story-count">0 / 500</span>
-      </div>
-      <div class="story">
-        <textarea id="story-ta" placeholder="スマホじゃ再現できない色だった。だから一眼を持ってきた。&#10;&#10;… みたいに、撮った時の気持ちを自分のことばで。" maxlength="500"></textarea>
-        <div class="story-foot">
-          <div class="story-prompts">
-            <button class="prompt-chip" data-p="ここで何があった？">何があった？</button>
-            <button class="prompt-chip" data-p="なぜここを選んだ？">なぜここを選んだ？</button>
-            <button class="prompt-chip" data-p="一番印象に残った瞬間は？">印象に残った瞬間</button>
-            <button class="prompt-chip" data-p="撮るとき、何を考えていた？">撮るとき考えたこと</button>
+        if (width > maxSize || height > maxSize) {
+          if (width > height) {
+            height = Math.round((height * maxSize) / width);
+            width = maxSize;
+          } else {
+            width = Math.round((width * maxSize) / height);
+            height = maxSize;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+      };
+      img.onerror = () => resolve(null);
+      img.src = base64Data;
+    });
+  };
+
+  // 現在地を取得する関数
+  const getLocation = () => {
+    if (!navigator.geolocation) {
+      alert('このブラウザは位置情報に対応していません');
+      return;
+    }
+
+    setGettingLocation(true);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        console.log('GPS位置取得成功:', lat, lng);
+        setData(d => ({ ...d, gpsLat: lat, gpsLng: lng }));
+        setGettingLocation(false);
+        alert(`📍 位置情報を取得しました！\n緯度: ${lat.toFixed(6)}\n経度: ${lng.toFixed(6)}`);
+      },
+      (error) => {
+        console.error('GPS位置取得エラー:', error);
+        setGettingLocation(false);
+        let msg = '位置情報を取得できませんでした';
+        if (error.code === 1) msg = '位置情報の使用が許可されていません。\n設定で許可してください。';
+        if (error.code === 2) msg = '位置情報を取得できませんでした。';
+        if (error.code === 3) msg = '位置情報の取得がタイムアウトしました。';
+        alert('⚠️ ' + msg);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
+  // 旅マップに保存する関数
+  const handleSave = async () => {
+    if (CONFIG.GAS_URL === 'YOUR_GAS_WEB_APP_URL_HERE') {
+      setSaveStatus('error');
+      alert('GASのURLが設定されていません。SETUP.md の手順に従って設定してください。');
+      return;
+    }
+
+    setSaving(true);
+    setSaveStatus(null);
+
+    try {
+      // 画像をリサイズ
+      const resizedPhotos = await Promise.all(
+        data.photos.map(async (p) => ({
+          caption: p.caption,
+          image: await resizeImage(p.image),
+          lat: p.lat,
+          lng: p.lng
+        }))
+      );
+
+      // GPS情報を決定（優先順位: 現在地ボタン > 写真EXIF）
+      console.log('=== DEBUG: handleSave ===');
+      console.log('data.gpsLat:', data.gpsLat, 'data.gpsLng:', data.gpsLng);
+
+      let gpsLat = data.gpsLat;
+      let gpsLng = data.gpsLng;
+
+      // 現在地ボタンで取得していない場合、写真のEXIFからも探す
+      if (!gpsLat || !gpsLng) {
+        const photoWithGps = data.photos.find(p => p.lat && p.lng);
+        if (photoWithGps) {
+          gpsLat = photoWithGps.lat;
+          gpsLng = photoWithGps.lng;
+          console.log('Using photo EXIF GPS:', gpsLat, gpsLng);
+        }
+      } else {
+        console.log('Using location button GPS:', gpsLat, gpsLng);
+      }
+
+      const payload = {
+        ...data,
+        photos: resizedPhotos.filter(p => p.image || p.caption),
+        gpsLat,
+        gpsLng
+      };
+
+      console.log('Final payload gpsLat:', payload.gpsLat, 'gpsLng:', payload.gpsLng);
+      console.log('=== END DEBUG ===');
+
+      const response = await fetch(CONFIG.GAS_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSaveStatus('success');
+        setSaved(true);
+      } else {
+        throw new Error(result.error || '保存に失敗しました');
+      }
+    } catch (error) {
+      console.error('Save error:', error);
+      setSaveStatus('error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const update = (key, val) => setData(d => ({ ...d, [key]: val }));
+  const currentId = STEPS[step];
+  const info = getStepInfo(currentId);
+  const isFirst = step === 0;
+  const isLast = step === STEPS.length - 1;
+
+  const goNext = () => { if (step < STEPS.length - 1) setStep(step + 1); };
+  const goBack = () => { if (step > 0) setStep(step - 1); };
+
+  const generateText = () => {
+    let t = "🚃 旅ログ\n═══════════════════\n\n";
+    if (data.date) t += `📅 ${data.date}`;
+    if (data.weather) t += ` ｜ ${data.weather}`;
+    if (data.companion) t += ` ｜ ${data.companion}`;
+    t += "\n";
+    if (data.destination) t += `📍 行き先：${data.destination}\n`;
+    t += "\n";
+    if (data.routes.some(r => r.from || r.to)) {
+      t += "🗺️ ルート\n───────────────────\n";
+      data.routes.forEach((r, i) => {
+        if (r.from || r.to) {
+          t += `  ${i+1}. `;
+          if (r.from) t += r.from;
+          if (r.dep) t += `（${r.dep}）`;
+          t += " → ";
+          if (r.to) t += r.to;
+          if (r.arr) t += `（${r.arr}）`;
+          if (r.line) t += ` ／ ${r.line}`;
+          t += "\n";
+        }
+      });
+      t += "\n";
+    }
+    if (data.photos.some(p => p.caption)) {
+      t += "📷 ベストショット\n───────────────────\n";
+      data.photos.forEach((p, i) => { if (p.caption) t += `  ${i+1}. ${p.caption}\n`; });
+      t += "\n";
+    }
+    const senseKeys = Object.keys(data.senses).filter(k => data.senses[k]);
+    if (senseKeys.length > 0) {
+      t += "👀 五感チェック\n───────────────────\n";
+      t += `  ${senseKeys.map(k => k.split("|")[1]).join("、")}\n\n`;
+    }
+    if (data.food) t += `🍽️ 食べたもの：${data.food}\n\n`;
+    if (data.mood) t += `😊 気分：${data.mood}\n\n`;
+    if (data.highlight) t += `✨ ハイライト\n───────────────────\n  ${data.highlight}\n\n`;
+    if (data.discovery) t += `💡 発見・気づき\n───────────────────\n  ${data.discovery}\n\n`;
+    t += "═══════════════════";
+    return t;
+  };
+
+  const handleExport = async () => {
+    const text = generateText();
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.cssText = "position:fixed;left:-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  const handleNew = () => {
+    setData({
+      date: TODAY, destination: "", weather: "", companion: "",
+      routes: [{ from:"", dep:"", to:"", arr:"", line:"" }],
+      photos: [{ caption:"", image:null, lat:null, lng:null }, { caption:"", image:null, lat:null, lng:null }],
+      senses: {}, food: "", mood: "", highlight: "", discovery: "",
+      gpsLat: null, gpsLng: null,
+    });
+    setSaveStatus(null);
+    setSaved(false);
+    setStep(0);
+  };
+
+  // --- Route helpers ---
+  const updateRoute = (idx, field, val) => {
+    const r = [...data.routes];
+    r[idx] = { ...r[idx], [field]: val };
+    update("routes", r);
+  };
+  const addRoute = () => update("routes", [...data.routes, { from:"", dep:"", to:"", arr:"", line:"" }]);
+  const removeRoute = (idx) => { if (data.routes.length > 1) update("routes", data.routes.filter((_,i)=>i!==idx)); };
+
+  // --- Photo helpers ---
+  const updatePhoto = (idx, field, val) => {
+    const p = [...data.photos];
+    p[idx] = { ...p[idx], [field]: val };
+    update("photos", p);
+  };
+  const handleImage = async (idx, e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // EXIF GPSメタデータを読み取り
+    console.log('=== DEBUG: handleImage ===');
+    console.log('File:', file.name, file.type, file.size);
+    let lat = null;
+    let lng = null;
+    try {
+      // まず全EXIFデータを取得してデバッグ
+      console.log('Calling exifr.parse() for full EXIF...');
+      const allExif = await exifr.parse(file);
+      console.log('Full EXIF data:', allExif);
+
+      // GPS専用の取得も試す
+      console.log('Calling exifr.gps()...');
+      const gpsData = await exifr.gps(file);
+      console.log('GPS data:', gpsData);
+
+      // GPSRefを含む生データも確認
+      if (allExif) {
+        console.log('GPSLatitude:', allExif.GPSLatitude);
+        console.log('GPSLongitude:', allExif.GPSLongitude);
+        console.log('latitude:', allExif.latitude);
+        console.log('longitude:', allExif.longitude);
+      }
+
+      if (gpsData && gpsData.latitude && gpsData.longitude) {
+        lat = gpsData.latitude;
+        lng = gpsData.longitude;
+        console.log('✓ EXIF GPS found:', lat, lng);
+      } else if (allExif && allExif.latitude && allExif.longitude) {
+        lat = allExif.latitude;
+        lng = allExif.longitude;
+        console.log('✓ EXIF GPS found (from parse):', lat, lng);
+      } else {
+        console.log('✗ No GPS data in EXIF');
+      }
+    } catch (err) {
+      console.error('✗ EXIF read error:', err);
+    }
+    console.log('Final lat/lng to store:', lat, lng);
+    console.log('=== END handleImage DEBUG ===');
+
+    // 画像をBase64に変換
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const p = [...data.photos];
+      p[idx] = { ...p[idx], image: ev.target.result, lat, lng };
+      update("photos", p);
+    };
+    reader.readAsDataURL(file);
+  };
+  const addPhoto = () => { if (data.photos.length < 6) update("photos", [...data.photos, { caption:"", image:null, lat:null, lng:null }]); };
+
+  // --- Sense toggle ---
+  const toggleSense = (cat, opt) => {
+    const key = `${cat}|${opt}`;
+    const s = { ...data.senses };
+    s[key] = !s[key];
+    if (!s[key]) delete s[key];
+    update("senses", s);
+  };
+
+  const renderContent = () => {
+    switch (currentId) {
+      case "intro":
+        return (
+          <div className="intro">
+            <div className="intro-emoji">🚃</div>
+            <div className="intro-title">旅ログ</div>
+            <div className="intro-sub">Trip Log</div>
+            <div className="intro-box">
+              <p>今日の旅を記録しよう。<br/><span className="accent">全部埋めなくてOK。</span><br/>写真とひとことだけでも十分 👍</p>
+            </div>
           </div>
-          <button class="mic-btn" id="mic-btn" title="音声で入力" aria-label="音声で入力">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11v1a7 7 0 0014 0v-1M12 19v3"/></svg>
-          </button>
-        </div>
-      </div>
-    </section>
+        );
 
-    <!-- BOARD PICKER -->
-    <section class="section fade-in" id="board-section" style="${state.photos.length?'':'display:none'}">
-      <div class="section-label">
-        <span>ボードに追加</span>
-        <span class="opt jp" id="board-hint">複数選べる</span>
-      </div>
-      <div class="board-picker" id="board-picker"></div>
-    </section>
-
-    <!-- DETAILS -->
-    <section class="section fade-in" id="details-section" style="${state.photos.length?'':'display:none'}">
-      <div class="details" id="details">
-        <div class="details-head" id="details-toggle">
-          <span>詳細（任意）</span>
-          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M6 9l6 6 6-6"/></svg>
-        </div>
-        <div class="details-body">
-          <div class="row">
-            <div class="k">撮影日</div>
-            <div class="v"><input type="date" id="det-date" value="${state.date}"></div>
-          </div>
-          <div class="row">
-            <div class="k">気分</div>
-            <div class="v">
-              <div class="mood-picker" id="mood-picker">
-                ${['最高','良い','ふつう','微妙','眠い','熱い'].map(m=>`<button class="mood-btn ${state.mood===m?'on':''}" data-m="${m}">${m}</button>`).join('')}
+      case "basic":
+        return (
+          <div className="section">
+            <div className="field">
+              <label className="label">日付</label>
+              <input type="date" className={`text-input${data.date?" filled":""}`} value={data.date} onChange={e=>update("date",e.target.value)} />
+            </div>
+            <div className="field">
+              <label className="label">行き先</label>
+              <input type="text" className={`text-input${data.destination?" filled":""}`} placeholder="例：仙台、名古屋、房総半島…" value={data.destination} onChange={e=>update("destination",e.target.value)} />
+            </div>
+            <div className="field">
+              <label className="label">現在地で記録</label>
+              <button
+                type="button"
+                onClick={getLocation}
+                disabled={gettingLocation}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  border: data.gpsLat ? '2px solid #22c55e' : '2px solid #f97316',
+                  background: data.gpsLat ? '#f0fdf4' : '#fff7ed',
+                  color: data.gpsLat ? '#16a34a' : '#ea580c',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: gettingLocation ? 'wait' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+              >
+                {gettingLocation ? (
+                  <>⏳ 取得中...</>
+                ) : data.gpsLat ? (
+                  <>✓ 位置情報を取得済み</>
+                ) : (
+                  <>📍 現在地を取得する</>
+                )}
+              </button>
+              {data.gpsLat && (
+                <div style={{fontSize: '11px', color: '#64748b', marginTop: '4px', textAlign: 'center'}}>
+                  緯度: {data.gpsLat.toFixed(4)}, 経度: {data.gpsLng.toFixed(4)}
+                </div>
+              )}
+            </div>
+            <div className="field">
+              <label className="label">天気</label>
+              <div className="chip-group">
+                {WEATHERS.map(w => (
+                  <div key={w.label} className={`chip chip-weather${data.weather===w.label?" selected":""}`} onClick={()=>update("weather",w.label)}>
+                    <span className="emoji">{w.emoji}</span>
+                    <span className="wlabel">{w.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="field">
+              <label className="label">誰と？</label>
+              <div className="chip-group">
+                {["ひとり","友達と","家族と"].map(c => (
+                  <div key={c} className={`chip${data.companion===c?" selected":""}`} style={{flex:1,textAlign:"center"}} onClick={()=>update("companion",c)}>{c}</div>
+                ))}
               </div>
             </div>
           </div>
-          <div class="row">
-            <div class="k">天気</div>
-            <div class="v">
-              <select id="det-weather">
-                <option value="">—</option>
-                <option>☀️ 晴れ</option>
-                <option>⛅ くもり</option>
-                <option>🌧️ 雨</option>
-                <option>❄️ 雪</option>
-                <option>🌫️ 霧</option>
-                <option>🌃 夜</option>
-              </select>
+        );
+
+      case "route":
+        return (
+          <div className="section">
+            <p className="hint">乗った電車を順番に。途中下車も書いてみよう。</p>
+            {data.routes.map((r, idx) => (
+              <div key={idx} className="route-card">
+                <span className="route-num">{idx+1}</span>
+                {data.routes.length > 1 && <button className="route-delete" onClick={()=>removeRoute(idx)}>✕ 削除</button>}
+                <div className="route-grid">
+                  <div><span className="route-label">出発駅</span><input className="route-input" placeholder="東京" value={r.from} onChange={e=>updateRoute(idx,"from",e.target.value)}/></div>
+                  <div><span className="route-label">出発時間</span><input type="time" className="route-input" value={r.dep} onChange={e=>updateRoute(idx,"dep",e.target.value)}/></div>
+                </div>
+                <div className="route-arrow">↓</div>
+                <div className="route-grid">
+                  <div><span className="route-label">到着駅</span><input className="route-input" placeholder="仙台" value={r.to} onChange={e=>updateRoute(idx,"to",e.target.value)}/></div>
+                  <div><span className="route-label">到着時間</span><input type="time" className="route-input" value={r.arr} onChange={e=>updateRoute(idx,"arr",e.target.value)}/></div>
+                </div>
+                <div style={{marginTop:8}}><span className="route-label">路線名・メモ</span><input className="route-input" placeholder="東北本線 / グリーン車にした 等" value={r.line} onChange={e=>updateRoute(idx,"line",e.target.value)}/></div>
+              </div>
+            ))}
+            <button className="add-btn" onClick={addRoute}>＋ 区間を追加</button>
+          </div>
+        );
+
+      case "photos":
+        return (
+          <div className="section">
+            <p className="hint">いい写真を選んで、ひとこと添えるだけでOK。</p>
+            {data.photos.map((p, idx) => (
+              <div key={idx} className="photo-item">
+                <label className={`photo-upload${p.image?" has-image":""}`}>
+                  {p.image ? (
+                    <img src={p.image} alt={`写真${idx+1}`} />
+                  ) : (
+                    <div className="photo-placeholder">
+                      <span className="emoji">📷</span>
+                      <span className="plabel">タップして写真 {idx+1} を選ぶ</span>
+                    </div>
+                  )}
+                  <input type="file" accept="image/*" onChange={e=>handleImage(idx,e)} />
+                </label>
+                <input type="text" className={`text-input${p.caption?" filled":""}`}
+                  placeholder={idx===0?"例：朝5時の東京駅 まだ暗い":idx===1?"例：仙台着いた でかい":"ひとこと"}
+                  value={p.caption} onChange={e=>updatePhoto(idx,"caption",e.target.value)} />
+              </div>
+            ))}
+            {data.photos.length < 6 && <button className="add-btn" onClick={addPhoto}>＋ 写真を追加（{data.photos.length}/6）</button>}
+          </div>
+        );
+
+      case "senses":
+        return (
+          <div className="section">
+            <p className="hint">タップするだけ。思い出すきっかけになるよ。</p>
+            {SENSES.map(cat => (
+              <div key={cat.label} className="sense-section">
+                <div className="sense-title">{cat.label}</div>
+                <div className="tag-group">
+                  {cat.options.map(opt => {
+                    const key = `${cat.label}|${opt}`;
+                    const on = !!data.senses[key];
+                    return <span key={opt} className={`tag${on?" selected":""}`} onClick={()=>toggleSense(cat.label,opt)}>{on?"✓ ":""}{opt}</span>;
+                  })}
+                </div>
+              </div>
+            ))}
+            <div className="field" style={{marginTop:8}}>
+              <div className="sense-title">🍽️ 食べたもの</div>
+              <input type="text" className={`text-input${data.food?" filled":""}`} placeholder="例：仙台駅で牛タン弁当 うまかった" value={data.food} onChange={e=>update("food",e.target.value)} />
             </div>
           </div>
-          <div class="row">
-            <div class="k">だれと</div>
-            <div class="v"><input type="text" id="det-companion" placeholder="ひとりで / 友達 / 家族" class="jp"></div>
+        );
+
+      case "mood":
+        return (
+          <div className="mood-section">
+            <div className="mood-prompt">今日の旅、どうだった？</div>
+            <div className="mood-list">
+              {MOODS.map(m => (
+                <div key={m.label} className={`mood-btn${data.mood===m.label?" selected":""}`} onClick={()=>update("mood",m.label)}>
+                  <span className="mood-emoji">{m.emoji}</span>
+                  <span className="mood-label">{m.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </div>
-    </section>
-  `;
+        );
 
-  renderPhotoZone();
-  renderStrip();
-  renderLocation();
-  renderBoardPicker();
-  bindStory();
-  bindDetails();
-  updateSaveEnabled();
-}
+      case "highlight":
+        return (
+          <div className="highlight-section">
+            <div className="hl-icon">✨</div>
+            <div className="hl-prompt">一番テンション上がった瞬間は？</div>
+            <div className="hl-sub">1行でいい。なんでもいい。</div>
+            <div className="hl-field">
+              <textarea className={`text-input${data.highlight?" filled":""}`} rows={4}
+                placeholder="例：始発で誰もいないホームに立ったとき、旅が始まる感じがしてワクワクした"
+                value={data.highlight} onChange={e=>update("highlight",e.target.value)} />
+            </div>
+            <div className="hl-field">
+              <div className="hl-field-label">💡 発見・気づいたこと（あれば）</div>
+              <textarea className={`text-input${data.discovery?" filled":""}`} rows={3}
+                placeholder="「この駅意外とよかった」「次はここ行きたい」とか"
+                value={data.discovery} onChange={e=>update("discovery",e.target.value)} />
+            </div>
+          </div>
+        );
 
-// ============================================================
-// PHOTO ZONE
-// ============================================================
-function renderPhotoZone(){
-  const pz = document.getElementById('pz');
-  if(state.photos.length === 0){
-    pz.innerHTML = `
-      <div class="pz-empty">
-        <div class="pz-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h3l2-3h8l2 3h3a1 1 0 011 1v11a1 1 0 01-1 1H3a1 1 0 01-1-1V8a1 1 0 011-1z"/><circle cx="12" cy="13" r="4"/></svg>
-        </div>
-        <div>
-          <div class="pz-title jp">写真を1枚、選ぶところから。</div>
-          <div class="pz-sub jp">撮った景色、食べたもの、電車、友達。<br>写真から場所も自動で読み取る。</div>
-        </div>
-        <div class="pz-btns">
-          <button class="pz-btn" id="pz-camera">📷 カメラ</button>
-          <button class="pz-btn ghost" id="pz-library">写真を選ぶ</button>
-        </div>
-      </div>
-    `;
-    pz.onclick = null;
-    pz.ondragover = e => { e.preventDefault(); pz.classList.add('dragover'); };
-    pz.ondragleave = () => pz.classList.remove('dragover');
-    pz.ondrop = e => { e.preventDefault(); pz.classList.remove('dragover'); handleFiles(e.dataTransfer.files); };
-    document.getElementById('pz-camera').onclick = (e)=>{ e.stopPropagation(); document.getElementById('file-camera').click(); };
-    document.getElementById('pz-library').onclick = (e)=>{ e.stopPropagation(); document.getElementById('file-primary').click(); };
-    pz.onclick = ()=> document.getElementById('file-primary').click();
-    document.getElementById('photo-count').textContent = '';
-  } else {
-    const p = state.photos[0];
-    pz.innerHTML = `
-      <img class="pz-preview" src="${p.dataUrl}" alt="">
-      <div class="pz-actions">
-        <button class="pz-chip" id="pz-change" aria-label="写真を変える">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h3l2-3h8l2 3h3a1 1 0 011 1v11a1 1 0 01-1 1H3a1 1 0 01-1-1V8a1 1 0 011-1z"/><circle cx="12" cy="13" r="4"/></svg>
-          変える
-        </button>
-        <button class="pz-chip danger" id="pz-remove" aria-label="写真を削除">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>
-        </button>
-      </div>
-    `;
-    document.getElementById('pz-change').onclick = ()=>{
-      document.getElementById('file-primary').click();
-    };
-    document.getElementById('pz-remove').onclick = ()=>{
-      state.photos.shift();
-      if(state.photos.length === 0){
-        state.place = null;
-        render();
-      } else {
-        render();
-      }
-    };
-    document.getElementById('photo-count').textContent = `${state.photos.length}枚`;
-  }
-}
+      case "done":
+        const filled = [data.destination, data.routes.some(r=>r.from||r.to), data.photos.some(p=>p.caption||p.image), Object.keys(data.senses).length>0, data.mood, data.highlight].filter(Boolean).length;
+        return (
+          <div className="done-section">
+            <div className="done-emoji">🎉</div>
+            <div className="done-title">おつかれ！</div>
+            <div className="done-msg">{filled>=5?"めっちゃ書いてくれたな！ありがとう 🔥":filled>=3?"いい記録になったよ 👍":"記録できた！これだけで十分 👍"}</div>
+            <div className="done-meta">{data.destination&&`📍 ${data.destination}`}{data.date&&` ・ ${data.date}`}</div>
+            <div className="done-btns">
+              {saveStatus && (
+                <div className={`save-status ${saveStatus}`}>
+                  {saveStatus === 'success' ? '✓ 旅マップに保存したよ！' : '⚠️ 保存できなかった…もう一度試してね'}
+                </div>
+              )}
+              {saved ? (
+                <>
+                  <a href="map.html" className="btn-map">
+                    <span>🗺️</span>
+                    <span>旅マップを見る →</span>
+                  </a>
+                  <a href="timeline.html" className="btn-map" style={{background: '#fff7ed', borderColor: '#f97316', color: '#ea580c'}}>
+                    <span>📷</span>
+                    <span>旅のアルバムを見る →</span>
+                  </a>
+                </>
+              ) : (
+                <button className="btn-save" onClick={handleSave} disabled={saving || !data.destination}>
+                  {saving ? (
+                    <>
+                      <span className="spinner"></span>
+                      <span>保存中...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>📍</span>
+                      <span>旅マップに保存する</span>
+                    </>
+                  )}
+                </button>
+              )}
+              <button className="btn-export" onClick={handleExport}>📤 テキストをコピーする</button>
+              <button className="btn-new" onClick={handleNew}>🆕 新しい旅ログを書く</button>
+            </div>
+          </div>
+        );
 
-function renderStrip(){
-  const strip = document.getElementById('strip');
-  if(state.photos.length <= 1 && state.photos.length > 0){
-    // show add button only after the first photo
-    strip.innerHTML = `
-      <div class="photo-thumb add" id="add-photo" aria-label="写真を追加">+</div>
-    `;
-  } else if(state.photos.length > 1){
-    strip.innerHTML = state.photos.slice(1).map((p,i)=>`
-      <div class="photo-thumb" data-idx="${i+1}">
-        <img src="${p.dataUrl}" alt="">
-        <button class="rm" data-rm="${i+1}" aria-label="削除">×</button>
-      </div>
-    `).join('') + (state.photos.length < 8 ? `<div class="photo-thumb add" id="add-photo">+</div>` : '');
-  } else {
-    strip.innerHTML = '';
-  }
-  const add = document.getElementById('add-photo');
-  if(add) add.onclick = ()=> document.getElementById('file-add').click();
-  strip.querySelectorAll('.rm').forEach(b=>{
-    b.onclick = (e)=>{
-      e.stopPropagation();
-      const idx = +b.dataset.rm;
-      state.photos.splice(idx,1);
-      render();
-    };
-  });
-}
-
-// ============================================================
-// FILE HANDLING & EXIF
-// ============================================================
-async function handleFiles(fileList, mode='primary'){
-  const files = Array.from(fileList || []).filter(f => f && f.type && f.type.startsWith('image/'));
-  if(!files.length) return;
-
-  if(mode === 'primary'){
-    // replace first photo (or create)
-    const first = files[0];
-    const processed = await processFile(first);
-    if(state.photos.length === 0){
-      state.photos.push(processed);
-    } else {
-      state.photos[0] = processed;
-    }
-    // additional files go to strip
-    for(let i=1; i<files.length && state.photos.length<8; i++){
-      state.photos.push(await processFile(files[i]));
-    }
-  } else {
-    for(const f of files){
-      if(state.photos.length>=8) break;
-      state.photos.push(await processFile(f));
-    }
-  }
-
-  // Try to read place from first photo's EXIF
-  const head = state.photos[0];
-  if(head && head.lat != null && head.lng != null && !state.place){
-    state.place = { lat: head.lat, lng: head.lng, name: null, source: 'exif' };
-    reverseGeocode(head.lat, head.lng).then(name=>{
-      if(state.place && state.place.source === 'exif'){
-        state.place.name = name || null;
-        renderLocation();
-      }
-    });
-  }
-
-  render();
-}
-
-async function processFile(file){
-  // try EXIF first
-  let lat = null, lng = null, dateTaken = null;
-  try{
-    if(window.exifr){
-      const exif = await window.exifr.parse(file, { gps:true });
-      if(exif){
-        if(typeof exif.latitude === 'number') lat = exif.latitude;
-        if(typeof exif.longitude === 'number') lng = exif.longitude;
-        if(exif.DateTimeOriginal) dateTaken = exif.DateTimeOriginal;
-      }
-    }
-  }catch(e){
-    console.warn('EXIF parse failed:', e);
-  }
-
-  // downscale to <=1600px
-  let dataUrl;
-  try {
-    dataUrl = await fileToDataUrl(file, 1600, 0.88);
-  } catch(e) {
-    console.error('fileToDataUrl failed:', e);
-    // fallback: use FileReader directly without resize
-    dataUrl = await new Promise((resolve, reject) => {
-      const fr = new FileReader();
-      fr.onload = () => resolve(fr.result);
-      fr.onerror = reject;
-      fr.readAsDataURL(file);
-    });
-  }
-
-  return { dataUrl, file: null, lat, lng, dateTaken, name: file.name || 'photo.jpg' };
-}
-
-function fileToDataUrl(file, maxSide, quality){
-  return new Promise((resolve, reject)=>{
-    const fr = new FileReader();
-    fr.onload = ()=>{
-      const img = new Image();
-      img.onload = ()=>{
-        const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
-        const w = Math.round(img.width*scale), h = Math.round(img.height*scale);
-        const cv = document.createElement('canvas');
-        cv.width = w; cv.height = h;
-        cv.getContext('2d').drawImage(img, 0, 0, w, h);
-        resolve(cv.toDataURL('image/jpeg', quality));
-      };
-      img.onerror = reject;
-      img.src = fr.result;
-    };
-    fr.onerror = reject;
-    fr.readAsDataURL(file);
-  });
-}
-
-// Reverse geocode via OpenStreetMap Nominatim (no key, public)
-const geoCache = new Map();
-async function reverseGeocode(lat, lng){
-  const key = `${lat.toFixed(4)},${lng.toFixed(4)}`;
-  if(geoCache.has(key)) return geoCache.get(key);
-  try{
-    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=14&accept-language=ja`;
-    const r = await fetch(url, { headers: { 'Accept':'application/json' } });
-    if(!r.ok) return null;
-    const j = await r.json();
-    const a = j.address || {};
-    const parts = [
-      a.town || a.city || a.village || a.suburb || a.county,
-      a.state
-    ].filter(Boolean);
-    const name = parts.join(' · ') || j.display_name || null;
-    geoCache.set(key, name);
-    return name;
-  }catch(e){ return null; }
-}
-
-// ============================================================
-// LOCATION SECTION
-// ============================================================
-function renderLocation(){
-  const el = document.getElementById('loc-card');
-  if(!el) return;
-  const p = state.place;
-  if(!p){
-    el.innerHTML = `
-      <div class="loc-map empty">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-      </div>
-      <div class="loc-info">
-        <div class="loc-label off"><span class="pulse"></span>位置情報なし</div>
-        <div class="loc-place jp" style="color:var(--ink-mute);font-weight:500">写真にGPSが含まれていません</div>
-      </div>
-      <button class="loc-action" id="loc-manual">現在地を使う</button>
-    `;
-    document.getElementById('loc-manual').onclick = useCurrentLocation;
-    return;
-  }
-
-  const mapUrl = `https://staticmap.openstreetmap.de/staticmap.php?center=${p.lat},${p.lng}&zoom=12&size=128x128&markers=${p.lat},${p.lng},red-pushpin`;
-  const sourceLabel = p.source === 'exif' ? 'EXIF GPS' : p.source === 'geo' ? '現在地' : '手動';
-  el.innerHTML = `
-    <div class="loc-map" style="background-image:url('${mapUrl}'), linear-gradient(135deg,#e5e5e5,#d4d4d4);background-size:cover;background-position:center"></div>
-    <div class="loc-info">
-      <div class="loc-label"><span class="pulse"></span>${sourceLabel}</div>
-      <div class="loc-place jp">${p.name ? escapeHtml(p.name) : '場所を特定中…'}</div>
-      <div class="loc-coords">${p.lat.toFixed(4)}, ${p.lng.toFixed(4)}</div>
-    </div>
-    <button class="loc-action" id="loc-clear" title="変更">変更</button>
-  `;
-  document.getElementById('loc-clear').onclick = ()=>{
-    if(confirm('場所情報を消しますか？（現在地に取り直せます）')){
-      state.place = null;
-      renderLocation();
+      default: return null;
     }
   };
-}
 
-function useCurrentLocation(){
-  if(!navigator.geolocation){ toast('この端末は位置情報に対応していません', true); return; }
-  const btn = document.getElementById('loc-manual');
-  if(btn){ btn.textContent = '取得中…'; btn.disabled = true; }
-  navigator.geolocation.getCurrentPosition(
-    async (pos)=>{
-      const lat = pos.coords.latitude, lng = pos.coords.longitude;
-      state.place = { lat, lng, name:null, source:'geo' };
-      renderLocation();
-      const name = await reverseGeocode(lat, lng);
-      if(state.place && state.place.source === 'geo'){
-        state.place.name = name;
-        renderLocation();
-      }
-    },
-    (err)=>{
-      toast('位置情報を取得できませんでした', true);
-      if(btn){ btn.textContent = '現在地を使う'; btn.disabled = false; }
-    },
-    { enableHighAccuracy:true, timeout:10000 }
+  return (
+    <div className="app">
+      {!isFirst && !isLast && (
+        <div className="header">
+          <div className="header-title">
+            <span className="header-icon">{info.icon}</span>
+            <span className="header-text">{info.title}</span>
+          </div>
+          <div className="progress">
+            {STEPS.map((_, i) => <div key={i} className={`progress-dot${i<=step?" active":""}`} />)}
+          </div>
+        </div>
+      )}
+      <div className="content" ref={contentRef}>
+        {renderContent()}
+      </div>
+      {!isLast && (
+        <div className="nav">
+          {step > 0 ? <button className="nav-back" onClick={goBack}>← もどる</button> : <div/>}
+          <button className="nav-next" onClick={goNext}>{isFirst?"はじめる →":step>=STEPS.length-2?"完了 🎉":"つぎへ →"}</button>
+        </div>
+      )}
+      {copied && <div className="toast">✓ コピーしたよ！</div>}
+    </div>
   );
 }
 
-// ============================================================
-// STORY (textarea + prompts + speech)
-// ============================================================
-function bindStory(){
-  const ta = document.getElementById('story-ta');
-  if(!ta) return;
-  ta.value = state.story || '';
-  const count = document.getElementById('story-count');
-  const update = ()=>{
-    state.story = ta.value;
-    if(count) count.textContent = `${ta.value.length} / 500`;
-    autoSize();
-    updateSaveEnabled();
-    saveDraft();
-  };
-  const autoSize = ()=>{
-    ta.style.height = 'auto';
-    ta.style.height = Math.min(400, Math.max(120, ta.scrollHeight)) + 'px';
-  };
-  ta.addEventListener('input', update);
-  autoSize();
-  update();
-
-  document.querySelectorAll('.prompt-chip').forEach(c=>{
-    c.onclick = ()=>{
-      const p = c.dataset.p;
-      const sep = ta.value && !ta.value.endsWith('\n') ? '\n\n' : '';
-      ta.value = ta.value + sep + p + '\n';
-      ta.focus();
-      ta.setSelectionRange(ta.value.length, ta.value.length);
-      update();
-    };
-  });
-
-  // speech recognition (ja-JP)
-  const mic = document.getElementById('mic-btn');
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SpeechRecognition){
-    mic.style.opacity = '0.4';
-    mic.title = '音声入力非対応';
-    mic.onclick = ()=> toast('この端末は音声入力に対応していません', true);
-  } else {
-    mic.onclick = ()=>{
-      if(recognizer && mic.classList.contains('rec')){
-        try{ recognizer.stop(); }catch(e){}
-        return;
-      }
-      recognizer = new SpeechRecognition();
-      recognizer.lang = 'ja-JP';
-      recognizer.continuous = true;
-      recognizer.interimResults = false;
-      recognizer.onstart = ()=> mic.classList.add('rec');
-      recognizer.onend = ()=> mic.classList.remove('rec');
-      recognizer.onerror = (e)=>{
-        mic.classList.remove('rec');
-        if(e.error !== 'no-speech') toast('音声入力エラー: ' + e.error, true);
-      };
-      recognizer.onresult = (ev)=>{
-        let text = '';
-        for(let i=ev.resultIndex; i<ev.results.length; i++){
-          if(ev.results[i].isFinal) text += ev.results[i][0].transcript;
-        }
-        if(text){
-          const sep = ta.value && !ta.value.endsWith(' ') && !ta.value.endsWith('\n') ? ' ' : '';
-          ta.value = ta.value + sep + text;
-          update();
-        }
-      };
-      try{ recognizer.start(); }catch(e){ toast('音声入力の開始に失敗', true); }
-    };
-  }
-}
-
-// ============================================================
-// BOARD PICKER
-// ============================================================
-function renderBoardPicker(){
-  const el = document.getElementById('board-picker');
-  if(!el) return;
-  el.innerHTML = allBoards.map(b=>`
-    <button class="board-chip ${state.boards.includes(b.id)?'selected':''}" data-bid="${b.id}" type="button">
-      <span class="emo">${b.emoji}</span>
-      <span class="jp">${escapeHtml(b.name)}</span>
-    </button>
-  `).join('') + `
-    <button class="board-chip new" id="new-board-btn" type="button">
-      <span>＋</span>
-      <span class="jp">新しいボード</span>
-    </button>
-  `;
-  el.querySelectorAll('.board-chip[data-bid]').forEach(c=>{
-    c.onclick = ()=>{
-      const id = c.dataset.bid;
-      const i = state.boards.indexOf(id);
-      if(i>=0) state.boards.splice(i,1);
-      else state.boards.push(id);
-      c.classList.toggle('selected');
-      saveDraft();
-    };
-  });
-  document.getElementById('new-board-btn').onclick = openNewBoard;
-}
-
-function openNewBoard(){
-  const m = document.getElementById('nb-modal');
-  m.classList.add('open');
-  const name = document.getElementById('nb-name');
-  name.value = '';
-  setTimeout(()=>name.focus(), 200);
-  // emoji picker
-  document.querySelectorAll('#nb-emoji button').forEach(b=>{
-    b.onclick = ()=>{
-      document.querySelectorAll('#nb-emoji button').forEach(x=>x.classList.remove('selected'));
-      b.classList.add('selected');
-    };
-  });
-  document.getElementById('nb-cancel').onclick = closeNewBoard;
-  m.onclick = (e)=>{ if(e.target === m) closeNewBoard(); };
-  document.getElementById('nb-ok').onclick = ()=>{
-    const nm = name.value.trim();
-    if(!nm){ name.focus(); return; }
-    const sel = document.querySelector('#nb-emoji button.selected');
-    const emoji = sel ? sel.dataset.e : '📷';
-    const id = 'b_' + Math.random().toString(36).slice(2,8);
-    const newBoard = { id, name:nm, emoji };
-    allBoards.push(newBoard);
-    saveBoards(allBoards);
-    state.boards.push(id);
-    closeNewBoard();
-    renderBoardPicker();
-    toast(`「${nm}」を作成しました`);
-  };
-}
-function closeNewBoard(){ document.getElementById('nb-modal').classList.remove('open'); }
-
-// ============================================================
-// DETAILS
-// ============================================================
-function bindDetails(){
-  const d = document.getElementById('details');
-  if(!d) return;
-  document.getElementById('details-toggle').onclick = ()=> d.classList.toggle('open');
-  document.getElementById('det-date').oninput = (e)=>{ state.date = e.target.value; saveDraft(); };
-  document.getElementById('det-weather').onchange = (e)=>{ state.weather = e.target.value; saveDraft(); };
-  document.getElementById('det-companion').oninput = (e)=>{ state.companion = e.target.value; saveDraft(); };
-  document.querySelectorAll('.mood-btn').forEach(b=>{
-    b.onclick = ()=>{
-      state.mood = (state.mood === b.dataset.m) ? '' : b.dataset.m;
-      document.querySelectorAll('.mood-btn').forEach(x=>x.classList.toggle('on', x.dataset.m === state.mood));
-      saveDraft();
-    };
-  });
-}
-
-// ============================================================
-// SAVE
-// ============================================================
-function updateSaveEnabled(){
-  const ok = state.photos.length > 0; // only require 1 photo
-  const topBtn = document.getElementById('save-top');
-  const fabBtn = document.getElementById('save-fab');
-  topBtn.disabled = !ok;
-  fabBtn.disabled = !ok;
-}
-
-async function save(){
-  if(state.photos.length === 0) return;
-  const topBtn = document.getElementById('save-top');
-  const fabBtn = document.getElementById('save-fab');
-  const topLabel = document.getElementById('save-top-label');
-  const fabLabel = document.getElementById('save-fab-label');
-  topBtn.disabled = true; fabBtn.disabled = true;
-  topLabel.textContent = '保存中…'; fabLabel.textContent = '保存中…';
-
-  try{
-    // Sync state from form fields right before saving
-    const storyTa = document.getElementById('story-ta');
-    if(storyTa) state.story = storyTa.value;
-    const detDate = document.getElementById('det-date');
-    if(detDate) state.date = detDate.value;
-    const detWeather = document.getElementById('det-weather');
-    if(detWeather) state.weather = detWeather.value;
-    const detCompanion = document.getElementById('det-companion');
-    if(detCompanion) state.companion = detCompanion.value;
-
-    // Build payload compatible with existing GAS schema
-    const firstPhotoGps = state.photos.find(p=>p.lat != null && p.lng != null);
-    const place = state.place;
-    const gpsLat = place ? place.lat : (firstPhotoGps ? firstPhotoGps.lat : null);
-    const gpsLng = place ? place.lng : (firstPhotoGps ? firstPhotoGps.lng : null);
-
-    const storyText = state.story || '';
-    const photosPayload = state.photos.map((p, i)=> ({
-      image: p.dataUrl,
-      caption: i === 0 ? storyText : '',
-      lat: p.lat,
-      lng: p.lng,
-    }));
-
-    const payload = {
-      date: state.date,
-      weather: state.weather,
-      companion: state.companion,
-      routes: [],
-      photos: photosPayload,
-      senses: {},
-      food: '',
-      mood: state.mood,
-      highlight: storyText,
-      discovery: place && place.name ? place.name : '',
-      destination: place && place.name ? place.name : '',
-      gpsLat, gpsLng,
-    };
-
-    // GAS requires no-cors mode, so we can't read the response
-    await fetch(TABILOG_CONFIG.GAS_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(payload)
-    });
-    // With no-cors, we assume success if no network error
-
-    // persist board assignments (use timestamp as ID since no-cors doesn't return response)
-    const pinId = `local_${Date.now()}`;
-    if(state.boards.length){
-      const assign = loadAssign();
-      assign[pinId] = state.boards.slice();
-      saveAssign(assign);
-    }
-
-    toast('保存しました');
-    localStorage.removeItem(TABILOG_CONFIG.DRAFT_KEY);
-    setTimeout(()=>{ location.href = 'timeline.html'; }, 600);
-  }catch(err){
-    console.error(err);
-    toast('保存に失敗しました。通信環境を確認してください', true);
-    topBtn.disabled = false; fabBtn.disabled = false;
-    topLabel.textContent = '保存'; fabLabel.textContent = '保存する';
-  }
-}
-
-// ============================================================
-// DRAFT persistence
-// ============================================================
-let draftTimer = null;
-function saveDraft(){
-  clearTimeout(draftTimer);
-  draftTimer = setTimeout(()=>{
-    try{
-      const light = {
-        story: state.story,
-        boards: state.boards,
-        date: state.date,
-        weather: state.weather,
-        companion: state.companion,
-        mood: state.mood,
-        place: state.place,
-        photoCount: state.photos.length, // don't store big data URLs in draft
-      };
-      localStorage.setItem(TABILOG_CONFIG.DRAFT_KEY, JSON.stringify(light));
-    }catch(e){}
-  }, 500);
-}
-function loadDraft(){
-  try{
-    const raw = localStorage.getItem(TABILOG_CONFIG.DRAFT_KEY);
-    if(!raw) return;
-    const d = JSON.parse(raw);
-    if(d.story) state.story = d.story;
-    if(d.boards) state.boards = d.boards;
-    if(d.date) state.date = d.date;
-    if(d.weather) state.weather = d.weather;
-    if(d.companion) state.companion = d.companion;
-    if(d.mood) state.mood = d.mood;
-    if(d.place) state.place = d.place;
-  }catch(e){}
-}
-
-// ============================================================
-// UTIL
-// ============================================================
-function toast(msg, isError){
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.toggle('error', !!isError);
-  t.classList.add('show');
-  clearTimeout(toast._t);
-  toast._t = setTimeout(()=>t.classList.remove('show'), 2400);
-}
-function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
-
-// ============================================================
-// GLOBAL FILE INPUT BINDINGS
-// ============================================================
-document.getElementById('file-primary').addEventListener('change', async e=> {
-  try {
-    await handleFiles(e.target.files, 'primary');
-  } catch(err) {
-    console.error('file-primary error:', err);
-    toast('写真の読み込みに失敗しました', true);
-  }
-  e.target.value = ''; // reset for re-selection
-});
-document.getElementById('file-camera').addEventListener('change', async e=> {
-  try {
-    await handleFiles(e.target.files, 'primary');
-  } catch(err) {
-    console.error('file-camera error:', err);
-    toast('写真の読み込みに失敗しました', true);
-  }
-  e.target.value = '';
-});
-document.getElementById('file-add').addEventListener('change', async e=> {
-  try {
-    await handleFiles(e.target.files, 'add');
-  } catch(err) {
-    console.error('file-add error:', err);
-    toast('写真の読み込みに失敗しました', true);
-  }
-  e.target.value = '';
-});
-
-document.getElementById('save-top').addEventListener('click', save);
-document.getElementById('save-fab').addEventListener('click', save);
-
-// ============================================================
-// BOOT
-// ============================================================
-loadDraft();
-render();
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 </script>
 </body>
 </html>
