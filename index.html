@@ -1185,15 +1185,26 @@ async function save(){
   topLabel.textContent = '保存中…'; fabLabel.textContent = '保存中…';
 
   try{
+    // Sync state from form fields right before saving
+    const storyTa = document.getElementById('story-ta');
+    if(storyTa) state.story = storyTa.value;
+    const detDate = document.getElementById('det-date');
+    if(detDate) state.date = detDate.value;
+    const detWeather = document.getElementById('det-weather');
+    if(detWeather) state.weather = detWeather.value;
+    const detCompanion = document.getElementById('det-companion');
+    if(detCompanion) state.companion = detCompanion.value;
+
     // Build payload compatible with existing GAS schema
     const firstPhotoGps = state.photos.find(p=>p.lat != null && p.lng != null);
     const place = state.place;
     const gpsLat = place ? place.lat : (firstPhotoGps ? firstPhotoGps.lat : null);
     const gpsLng = place ? place.lng : (firstPhotoGps ? firstPhotoGps.lng : null);
 
+    const storyText = state.story || '';
     const photosPayload = state.photos.map((p, i)=> ({
       image: p.dataUrl,
-      caption: i === 0 ? (state.story || '') : '',
+      caption: i === 0 ? storyText : '',
       lat: p.lat,
       lng: p.lng,
     }));
@@ -1207,7 +1218,7 @@ async function save(){
       senses: {},
       food: '',
       mood: state.mood,
-      highlight: state.story,
+      highlight: storyText,
       discovery: place && place.name ? place.name : '',
       destination: place && place.name ? place.name : '',
       gpsLat, gpsLng,
