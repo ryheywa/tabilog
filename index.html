@@ -874,18 +874,34 @@ async function processFile(file){
   // try EXIF first
   let lat = null, lng = null, dateTaken = null;
   try{
-    const exif = await window.exifr.parse(file, { gps:true });
-    if(exif){
-      if(typeof exif.latitude === 'number') lat = exif.latitude;
-      if(typeof exif.longitude === 'number') lng = exif.longitude;
-      if(exif.DateTimeOriginal) dateTaken = exif.DateTimeOriginal;
+    if(window.exifr){
+      const exif = await window.exifr.parse(file, { gps:true });
+      if(exif){
+        if(typeof exif.latitude === 'number') lat = exif.latitude;
+        if(typeof exif.longitude === 'number') lng = exif.longitude;
+        if(exif.DateTimeOriginal) dateTaken = exif.DateTimeOriginal;
+      }
     }
-  }catch(e){/* ignore */}
+  }catch(e){
+    console.warn('EXIF parse failed:', e);
+  }
 
   // downscale to <=1600px
-  const dataUrl = await fileToDataUrl(file, 1600, 0.88);
+  let dataUrl;
+  try {
+    dataUrl = await fileToDataUrl(file, 1600, 0.88);
+  } catch(e) {
+    console.error('fileToDataUrl failed:', e);
+    // fallback: use FileReader directly without resize
+    dataUrl = await new Promise((resolve, reject) => {
+      const fr = new FileReader();
+      fr.onload = () => resolve(fr.result);
+      fr.onerror = reject;
+      fr.readAsDataURL(file);
+    });
+  }
 
-  return { dataUrl, file: null, lat, lng, dateTaken, name:file.name };
+  return { dataUrl, file: null, lat, lng, dateTaken, name: file.name || 'photo.jpg' };
 }
 
 function fileToDataUrl(file, maxSide, quality){
@@ -1278,9 +1294,33 @@ function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<'
 // ============================================================
 // GLOBAL FILE INPUT BINDINGS
 // ============================================================
-document.getElementById('file-primary').addEventListener('change', e=> handleFiles(e.target.files, 'primary'));
-document.getElementById('file-camera').addEventListener('change', e=> handleFiles(e.target.files, 'primary'));
-document.getElementById('file-add').addEventListener('change', e=> handleFiles(e.target.files, 'add'));
+document.getElementById('file-primary').addEventListener('change', async e=> {
+  try {
+    await handleFiles(e.target.files, 'primary');
+  } catch(err) {
+    console.error('file-primary error:', err);
+    toast('写真の読み込みに失敗しました', true);
+  }
+  e.target.value = ''; // reset for re-selection
+});
+document.getElementById('file-camera').addEventListener('change', async e=> {
+  try {
+    await handleFiles(e.target.files, 'primary');
+  } catch(err) {
+    console.error('file-camera error:', err);
+    toast('写真の読み込みに失敗しました', true);
+  }
+  e.target.value = '';
+});
+document.getElementById('file-add').addEventListener('change', async e=> {
+  try {
+    await handleFiles(e.target.files, 'add');
+  } catch(err) {
+    console.error('file-add error:', err);
+    toast('写真の読み込みに失敗しました', true);
+  }
+  e.target.value = '';
+});
 
 document.getElementById('save-top').addEventListener('click', save);
 document.getElementById('save-fab').addEventListener('click', save);
